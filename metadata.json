@@ -1,0 +1,6 @@
+{
+  "name": "RadIA — Copiloto de Ultrassonografia com IA",
+  "description": "Sistema de apoio diagnóstico, triagem de urgência e laudos padronizados em ultrassonografia para médicos radiologistas.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
