@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { StandardizedRadiologyReport } from '../../types/report';
 import { Patient } from '../../types/patient';
 import { PdfReportService } from '../../services/pdfReportService';
-import { BadgeUrgency } from '../common/BadgeUrgency';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { localizePatient } from '../../i18n/demoLocalization';
 import {
@@ -75,12 +74,11 @@ export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
     const isEn = lang === 'en';
     const textToCopy = isEn
       ? `
-ULTRASOUND MEDICAL REPORT — RADIA DIAGNOSTIC COPILOT
+ULTRASOUND MEDICAL REPORT — ULTRAI MED DIAGNOSTIC COPILOT
 ======================================================
-PATIENT: ${localizedPatient.name}
-AGE: ${localizedPatient.age} yrs | SEX: ${genderLabel} | RECORD: ${localizedPatient.recordNumber}
-DATE: ${new Date(currentReport.createdAt).toLocaleDateString('en-US')} ${new Date(currentReport.createdAt).toLocaleTimeString('en-US')}
-URGENCY TIER: ${t.urgency[currentReport.urgencyLevel]}
+PATIENT: ${localizedPatient.name || (isEn ? 'Not specified' : 'Não informado')}
+${localizedPatient.age > 0 ? `AGE: ${localizedPatient.age} yrs | ` : ''}SEX: ${genderLabel}
+DATE: ${new Date(currentReport.createdAt).toLocaleDateString('en-US')}
 ------------------------------------------------------
 1. TECHNIQUE AND EXAM PROTOCOL:
 - Exam: ${currentReport.technique.protocolName}
@@ -97,7 +95,6 @@ ${currentReport.diagnosticImpression.classificationScore ? `- Standardized Score
 - Prior Comparison: ${currentReport.diagnosticImpression.comparativeEvolution || 'N/A'}
 
 4. RISK & SEVERITY STRATIFICATION:
-- Level: ${t.urgency[currentReport.urgencyLevel]}
 - Rationale: ${currentReport.urgencyRationale}
 - Immediate Action: ${currentReport.riskStratification.actionRecommendation}
 
@@ -113,15 +110,14 @@ ${currentReport.medicalLiterature.map((l) => `• ${l.guidelineOrStudy} (${l.org
 ------------------------------------------------------
 SIGNATURE:
 ${physicianName} - ${physicianCRM}
-Report issued with RadIA decision support (International Ultrasound Guidelines).
+Report issued with UltrAI Med decision support (International Ultrasound Guidelines).
       `.trim()
       : `
-LAUDO DE ULTRASSONOGRAFIA — RADIA COPILOTO DIAGNÓSTICO
+LAUDO DE ULTRASSONOGRAFIA — ULTRAI MED COPILOTO DIAGNÓSTICO
 ======================================================
-PACIENTE: ${localizedPatient.name}
-IDADE: ${localizedPatient.age} anos | SEXO: ${genderLabel} | PRONTUÁRIO: ${localizedPatient.recordNumber}
-DATA: ${new Date(currentReport.createdAt).toLocaleDateString('pt-BR')} ${new Date(currentReport.createdAt).toLocaleTimeString('pt-BR')}
-GRAVIDADE ESTIMADA: ${t.urgency[currentReport.urgencyLevel]}
+PACIENTE: ${localizedPatient.name || 'Não informado'}
+${localizedPatient.age > 0 ? `IDADE: ${localizedPatient.age} anos | ` : ''}SEXO: ${genderLabel}
+DATA: ${new Date(currentReport.createdAt).toLocaleDateString('pt-BR')}
 ------------------------------------------------------
 1. TÉCNICA E PROTOCOLO:
 - Exame: ${currentReport.technique.protocolName}
@@ -138,7 +134,6 @@ ${currentReport.diagnosticImpression.classificationScore ? `- Classificação / 
 - Evolução Comparativa: ${currentReport.diagnosticImpression.comparativeEvolution || 'N/A'}
 
 4. ESTRATIFICAÇÃO DE RISCO & GRAVIDADE:
-- Nível: ${t.urgency[currentReport.urgencyLevel]}
 - Justificativa: ${currentReport.urgencyRationale}
 - Conduta Imediata Sugerida: ${currentReport.riskStratification.actionRecommendation}
 
@@ -154,7 +149,7 @@ ${currentReport.medicalLiterature.map((l) => `• ${l.guidelineOrStudy} (${l.org
 ------------------------------------------------------
 ASSINATURA:
 ${physicianName} - ${physicianCRM}
-Laudo emitido com suporte de RadIA (Diretrizes Internacionais de Ultrassonografia).
+Laudo emitido com suporte do UltrAI Med (Diretrizes Internacionais de Ultrassonografia).
       `.trim();
 
     navigator.clipboard.writeText(textToCopy);
@@ -282,24 +277,22 @@ Laudo emitido com suporte de RadIA (Diretrizes Internacionais de Ultrassonografi
               </h1>
               <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                 <span>
-                  {t.report.patient}: <strong className="text-slate-800 dark:text-slate-200">{localizedPatient.name}</strong>
+                  {t.report.patient}:{' '}
+                  <strong className="text-slate-800 dark:text-slate-200">
+                    {localizedPatient.name || (lang === 'en' ? 'Not specified' : 'Não informado')}
+                  </strong>
                 </span>
                 <span aria-hidden="true">·</span>
                 <span>
-                  {localizedPatient.age} {t.report.years} ({genderLabel})
-                </span>
-                <span aria-hidden="true">·</span>
-                <span className="font-mono">
-                  {t.report.record}: {localizedPatient.recordNumber}
+                  {localizedPatient.age > 0 ? `${localizedPatient.age} ${t.report.years} · ` : ''}
+                  {genderLabel}
                 </span>
               </div>
             </div>
 
             <div className="flex flex-col items-end gap-1.5">
-              <BadgeUrgency level={currentReport.urgencyLevel} size="md" />
               <span className="text-[11px] text-slate-400 font-mono tabular-nums">
-                {new Date(currentReport.createdAt).toLocaleDateString(locale)} {t.report.at}{' '}
-                {new Date(currentReport.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                {new Date(currentReport.createdAt).toLocaleDateString(locale)}
               </span>
             </div>
           </div>
@@ -429,8 +422,7 @@ Laudo emitido com suporte de RadIA (Diretrizes Internacionais de Ultrassonografi
             {t.report.sec4}
           </h2>
           <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-lg border border-slate-100 dark:border-slate-800 space-y-2 text-xs">
-            <div className="flex items-center gap-2">
-              <BadgeUrgency level={currentReport.urgencyLevel} size="md" />
+            <div>
               <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {currentReport.urgencyRationale}
               </span>

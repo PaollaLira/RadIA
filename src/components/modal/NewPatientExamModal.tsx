@@ -36,7 +36,6 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
   const [specialty, setSpecialty] = useState<UltrasoundSpecialty>('ABDOMEN');
   const [transducer, setTransducer] = useState<TransducerType>('CONVEX');
   const [initialFindingText, setInitialFindingText] = useState('');
-  const [urgency, setUrgency] = useState<'EMERGENCY' | 'URGENT' | 'PRIORITY' | 'ELECTIVE'>('PRIORITY');
 
   useEffect(() => {
     setRoomBed((prev) => {
@@ -50,7 +49,7 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !clinicalIndication.trim()) return;
+    if (!name.trim()) return;
 
     const patientId = `pat-${Date.now()}`;
     const examId = `exam-${Date.now()}`;
@@ -75,7 +74,7 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
       id: examId,
       patientId,
       specialty,
-      urgency,
+      urgency: 'PRIORITY',
       status: 'PENDING',
       transducer,
       manualFindingText: initialFindingText.trim() || undefined,
@@ -171,45 +170,27 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                {t.newPatientModal.specialtyLabel}
-              </label>
-              <select
-                value={specialty}
-                onChange={(e) => {
-                  const spec = e.target.value as UltrasoundSpecialty;
-                  setSpecialty(spec);
-                  setTransducer(DEFAULT_TRANSDUCER[spec]);
-                }}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-              >
-                <option value="ABDOMEN">{t.specialties.ABDOMEN}</option>
-                <option value="THYROID">{t.specialties.THYROID}</option>
-                <option value="BREAST">{t.specialties.BREAST}</option>
-                <option value="URINARY_KIDNEYS">{t.specialties.URINARY_KIDNEYS}</option>
-                <option value="POCUS_FAST">{t.specialties.POCUS_FAST}</option>
-                <option value="PELVIC_GYN">{t.specialties.PELVIC_GYN}</option>
-                <option value="VASCULAR_DOPPLER">{t.specialties.VASCULAR_DOPPLER}</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                {t.newPatientModal.urgencyLabel}
-              </label>
-              <select
-                value={urgency}
-                onChange={(e) => setUrgency(e.target.value as 'EMERGENCY' | 'URGENT' | 'PRIORITY' | 'ELECTIVE')}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-medium"
-              >
-                <option value="EMERGENCY">{t.newPatientModal.urgencyEmergency}</option>
-                <option value="URGENT">{t.newPatientModal.urgencyUrgent}</option>
-                <option value="PRIORITY">{t.newPatientModal.urgencyPriority}</option>
-                <option value="ELECTIVE">{t.newPatientModal.urgencyElective}</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              {t.newPatientModal.specialtyLabel}
+            </label>
+            <select
+              value={specialty}
+              onChange={(e) => {
+                const spec = e.target.value as UltrasoundSpecialty;
+                setSpecialty(spec);
+                setTransducer(DEFAULT_TRANSDUCER[spec]);
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            >
+              <option value="ABDOMEN">{t.specialties.ABDOMEN}</option>
+              <option value="THYROID">{t.specialties.THYROID}</option>
+              <option value="BREAST">{t.specialties.BREAST}</option>
+              <option value="URINARY_KIDNEYS">{t.specialties.URINARY_KIDNEYS}</option>
+              <option value="POCUS_FAST">{t.specialties.POCUS_FAST}</option>
+              <option value="PELVIC_GYN">{t.specialties.PELVIC_GYN}</option>
+              <option value="VASCULAR_DOPPLER">{t.specialties.VASCULAR_DOPPLER}</option>
+            </select>
           </div>
 
           <div>
@@ -217,7 +198,6 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
               {t.newPatientModal.indicationLabel}
             </label>
             <textarea
-              required
               rows={2}
               value={clinicalIndication}
               onChange={(e) => setClinicalIndication(e.target.value)}

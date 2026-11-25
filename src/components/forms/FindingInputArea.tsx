@@ -2,21 +2,28 @@ import React from 'react';
 import { UltrasoundSpecialty, TransducerType } from '../../types/ultrasound';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { AppLanguage } from '../../i18n/translations';
-import { Camera, FileText, Sparkles, CheckCircle, Wand2 } from 'lucide-react';
+import { Camera, FileText, Sparkles, CheckCircle, Wand2, User, MessageSquare } from 'lucide-react';
 
 interface FindingInputAreaProps {
   inputMode: 'CAMERA_IMAGE' | 'TEXT_FINDING';
   onChangeInputMode: (mode: 'CAMERA_IMAGE' | 'TEXT_FINDING') => void;
-  specialty: UltrasoundSpecialty;
-  onChangeSpecialty: (specialty: UltrasoundSpecialty) => void;
-  transducer: TransducerType;
-  onChangeTransducer: (transducer: TransducerType) => void;
+  patientName: string;
+  onChangePatientName: (name: string) => void;
+  patientAge: string;
+  onChangePatientAge: (age: string) => void;
+  patientGender: 'M' | 'F' | 'Outro';
+  onChangePatientGender: (gender: 'M' | 'F' | 'Outro') => void;
+  specialty: UltrasoundSpecialty | '';
+  onChangeSpecialty: (specialty: UltrasoundSpecialty | '') => void;
+  transducer: TransducerType | '';
+  onChangeTransducer: (transducer: TransducerType | '') => void;
   textFinding: string;
   onChangeTextFinding: (text: string) => void;
   hasCapturedImage: boolean;
   onOpenLiveCamera: () => void;
   onAnalyze: () => void;
   isAnalyzing: boolean;
+  onOpenChat?: () => void;
 }
 
 const DEFAULT_TRANSDUCER_BY_SPECIALTY: Record<UltrasoundSpecialty, TransducerType> = {
@@ -105,6 +112,12 @@ const QUICK_PHRASES: Record<AppLanguage, Record<UltrasoundSpecialty, string[]>> 
 export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
   inputMode,
   onChangeInputMode,
+  patientName,
+  onChangePatientName,
+  patientAge,
+  onChangePatientAge,
+  patientGender,
+  onChangePatientGender,
   specialty,
   onChangeSpecialty,
   transducer,
@@ -115,6 +128,7 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
   onOpenLiveCamera,
   onAnalyze,
   isAnalyzing,
+  onOpenChat,
 }) => {
   const { lang, t } = useLanguage();
 
@@ -173,6 +187,67 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
         </div>
       </div>
 
+      {/* Patient Name, Age & Sex Inputs for Report */}
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-3.5">
+        <div className="sm:col-span-7">
+          <label
+            htmlFor="finding-patient-name"
+            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+          >
+            {t.findingInput.patientNameLabel}
+          </label>
+          <div className="relative">
+            <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              id="finding-patient-name"
+              type="text"
+              value={patientName}
+              onChange={(e) => onChangePatientName(e.target.value)}
+              placeholder={t.findingInput.patientNamePlaceholder}
+              className="w-full text-xs sm:text-sm pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            />
+          </div>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label
+            htmlFor="finding-patient-age"
+            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+          >
+            {t.findingInput.ageLabel}
+          </label>
+          <input
+            id="finding-patient-age"
+            type="number"
+            min="0"
+            max="120"
+            value={patientAge}
+            onChange={(e) => onChangePatientAge(e.target.value)}
+            placeholder={t.findingInput.agePlaceholder}
+            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+          />
+        </div>
+
+        <div className="sm:col-span-3">
+          <label
+            htmlFor="finding-patient-gender"
+            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+          >
+            {t.findingInput.genderLabel}
+          </label>
+          <select
+            id="finding-patient-gender"
+            value={patientGender}
+            onChange={(e) => onChangePatientGender(e.target.value as 'M' | 'F' | 'Outro')}
+            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+          >
+            <option value="F">{t.patientCard.female}</option>
+            <option value="M">{t.patientCard.male}</option>
+            <option value="Outro">{t.patientCard.other}</option>
+          </select>
+        </div>
+      </div>
+
       {/* Specialty and Transducer Selectors */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <div>
@@ -182,12 +257,13 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
           <select
             value={specialty}
             onChange={(e) => {
-              const newSpec = e.target.value as UltrasoundSpecialty;
+              const newSpec = e.target.value as UltrasoundSpecialty | '';
               onChangeSpecialty(newSpec);
-              onChangeTransducer(DEFAULT_TRANSDUCER_BY_SPECIALTY[newSpec]);
+              onChangeTransducer(newSpec ? DEFAULT_TRANSDUCER_BY_SPECIALTY[newSpec] : '');
             }}
             className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           >
+            <option value="">{t.findingInput.specialtyPlaceholder}</option>
             {specialtyOrder.map((key) => (
               <option key={key} value={key}>
                 {t.specialties[key]}
@@ -202,9 +278,10 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
           </label>
           <select
             value={transducer}
-            onChange={(e) => onChangeTransducer(e.target.value as TransducerType)}
+            onChange={(e) => onChangeTransducer(e.target.value as TransducerType | '')}
             className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           >
+            <option value="">{t.findingInput.transducerPlaceholder}</option>
             <option value="CONVEX">{t.transducers.CONVEX}</option>
             <option value="LINEAR">{t.transducers.LINEAR}</option>
             <option value="SECTOR">{t.transducers.SECTOR}</option>
@@ -238,26 +315,28 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
       )}
 
       {/* Quick Clinical Shortcuts */}
-      <div className="mb-3">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-          <Wand2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-          <span>{t.findingInput.quickShortcuts}</span>
+      {specialty && QUICK_PHRASES[lang][specialty] && (
+        <div className="mb-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            <Wand2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <span>{t.findingInput.quickShortcuts}</span>
+          </div>
+          <div className="space-y-1.5">
+            {QUICK_PHRASES[lang][specialty].map((phrase, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleApplyPresetPhrase(phrase)}
+                className="w-full text-left p-2 rounded-lg text-xs bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 transition-colors text-slate-700 dark:text-slate-300 line-clamp-2"
+              >
+                <span className="font-semibold text-teal-700 dark:text-cyan-400 mr-1.5">
+                  {t.findingInput.optionPrefix} {idx + 1}:
+                </span>
+                {phrase}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="space-y-1.5">
-          {QUICK_PHRASES[lang][specialty].map((phrase, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleApplyPresetPhrase(phrase)}
-              className="w-full text-left p-2 rounded-lg text-xs bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 transition-colors text-slate-700 dark:text-slate-300 line-clamp-2"
-            >
-              <span className="font-semibold text-teal-700 dark:text-cyan-400 mr-1.5">
-                {t.findingInput.optionPrefix} {idx + 1}:
-              </span>
-              {phrase}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Main Textarea for Findings */}
       <div className="mb-4">
@@ -275,24 +354,37 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
         />
       </div>
 
-      {/* Primary Action Button */}
-      <button
-        onClick={onAnalyze}
-        disabled={isAnalyzing || (!textFinding.trim() && !hasCapturedImage)}
-        className="w-full py-3 rounded-xl bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-teal-900/20 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.99]"
-      >
-        {isAnalyzing ? (
-          <>
-            <div className="w-4 h-4 border-2 border-cyan-300 border-t-transparent rounded-full animate-spin" />
-            <span>{t.findingInput.processing}</span>
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4 text-cyan-300" />
-            <span>{t.findingInput.generateBtn}</span>
-          </>
+      {/* Primary & Copilot Action Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        <button
+          onClick={onAnalyze}
+          disabled={isAnalyzing || (!textFinding.trim() && !hasCapturedImage)}
+          className="flex-1 py-3 px-4 rounded-xl bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-teal-900/20 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.99]"
+        >
+          {isAnalyzing ? (
+            <>
+              <div className="w-4 h-4 border-2 border-cyan-300 border-t-transparent rounded-full animate-spin" />
+              <span>{t.findingInput.processing}</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 text-cyan-300" />
+              <span>{t.findingInput.generateBtn}</span>
+            </>
+          )}
+        </button>
+
+        {onOpenChat && (
+          <button
+            type="button"
+            onClick={onOpenChat}
+            className="py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 text-teal-900 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 transition-colors flex items-center justify-center gap-2 shrink-0"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>{t.station.discussRadia}</span>
+          </button>
         )}
-      </button>
+      </div>
     </div>
   );
 };

@@ -31,10 +31,24 @@ export class AiRadiologyEngine {
       }),
     });
 
-    const data = await response.json();
+    const rawBody = await response.text();
+    let data: { report?: StandardizedRadiologyReport; error?: string } = {};
+    try {
+      data = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      data = {};
+    }
+
     if (!response.ok || !data.report) {
       throw new Error(
-        data.error || 'Erro ao processar análise ecográfica com a IA.'
+        data.error ||
+          (response.status === 503
+            ? options.language === 'en'
+              ? 'The AI service is temporarily experiencing high demand. Please wait a few seconds and try again.'
+              : 'O serviço de IA está temporariamente com alta demanda. Aguarde alguns segundos e tente novamente.'
+            : options.language === 'en'
+              ? 'Failed to process clinical ultrasound analysis with AI.'
+              : 'Erro ao processar análise ecográfica com a IA.')
       );
     }
 

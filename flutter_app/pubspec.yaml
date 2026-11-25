@@ -1,5 +1,5 @@
-name: radia_usg
-description: RadIA — Copiloto de Ultrassonografia com IA para médicos radiologistas em Flutter.
+name: ultrai_med
+description: UltrAI Med — Copiloto de Ultrassonografia com IA para médicos radiologistas em Flutter.
 publish_to: 'none'
 version: 1.0.0+1
 

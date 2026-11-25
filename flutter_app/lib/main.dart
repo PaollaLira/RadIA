@@ -11,7 +11,7 @@ class RadiaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'RadIA — Copiloto USG',
+      title: 'UltrAI Med — Copiloto USG',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,

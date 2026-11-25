@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { StandardizedRadiologyReport, UrgencyLevel } from '../types/report';
+import { StandardizedRadiologyReport } from '../types/report';
 import { Patient } from '../types/patient';
 import { UltrasoundExam } from '../types/ultrasound';
 import { AppLanguage } from '../i18n/translations';
@@ -20,39 +20,6 @@ function sanitizeForPdf(text: string | undefined | null): string {
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
     .replace(/—/g, '-');
-}
-
-function getUrgencyLabel(
-  level: UrgencyLevel,
-  lang: AppLanguage
-): {
-  label: string;
-  rgb: [number, number, number];
-} {
-  if (lang === 'en') {
-    switch (level) {
-      case 'EMERGENCY':
-        return { label: 'CRITICAL EMERGENCY', rgb: [185, 28, 28] };
-      case 'URGENT':
-        return { label: 'URGENT', rgb: [180, 83, 9] };
-      case 'PRIORITY':
-        return { label: 'PRIORITY', rgb: [29, 78, 216] };
-      case 'ELECTIVE':
-      default:
-        return { label: 'ELECTIVE / ROUTINE', rgb: [4, 120, 87] };
-    }
-  }
-  switch (level) {
-    case 'EMERGENCY':
-      return { label: 'EMERGÊNCIA CRÍTICA', rgb: [185, 28, 28] };
-    case 'URGENT':
-      return { label: 'URGENTE', rgb: [180, 83, 9] };
-    case 'PRIORITY':
-      return { label: 'PRIORITÁRIO', rgb: [29, 78, 216] };
-    case 'ELECTIVE':
-    default:
-      return { label: 'ELETIVO / ROTINA', rgb: [4, 120, 87] };
-  }
 }
 
 async function normalizeImageToJpeg(
@@ -253,12 +220,9 @@ export class PdfReportService {
       cursorY
     );
 
-    const examDateFormatted = `${new Date(report.createdAt).toLocaleDateString(
+    const examDateFormatted = new Date(report.createdAt).toLocaleDateString(
       locale
-    )} ${isEn ? 'at' : 'às'} ${new Date(report.createdAt).toLocaleTimeString(
-      locale,
-      { hour: '2-digit', minute: '2-digit' }
-    )}`;
+    );
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
@@ -281,17 +245,6 @@ export class PdfReportService {
       marginX,
       cursorY
     );
-
-    const urgencyInfo = getUrgencyLabel(report.urgencyLevel, lang);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...urgencyInfo.rgb);
-    doc.text(
-      sanitizeForPdf(`${isEn ? 'PRIORITY' : 'PRIORIDADE'}: ${urgencyInfo.label}`),
-      pageWidth - marginX,
-      cursorY,
-      { align: 'right' }
-    );
     cursorY += 6;
 
     // Caixa de Identificação do Paciente
@@ -300,15 +253,17 @@ export class PdfReportService {
     doc.setDrawColor(...BORDER_GRAY);
     doc.setLineWidth(0.25);
 
-    const indicationLines = doc.splitTextToSize(
-      sanitizeForPdf(
-        `${isEn ? 'Clinical Indication' : 'Indicação Clínica'}: ${
-          patient.clinicalIndication
-        }`
-      ),
-      contentWidth - 6
-    ) as string[];
-    const boxHeight = 14 + indicationLines.length * 4.2;
+    const indicationLines = patient.clinicalIndication?.trim()
+      ? (doc.splitTextToSize(
+          sanitizeForPdf(
+            `${isEn ? 'Clinical Indication' : 'Indicação Clínica'}: ${
+              patient.clinicalIndication
+            }`
+          ),
+          contentWidth - 6
+        ) as string[])
+      : [];
+    const boxHeight = indicationLines.length > 0 ? 14 + indicationLines.length * 4.2 : 13;
 
     doc.roundedRect(marginX, boxStartY, contentWidth, boxHeight, 2, 2, 'FD');
     cursorY += 5;
@@ -317,21 +272,13 @@ export class PdfReportService {
     doc.setFontSize(10);
     doc.setTextColor(...SLATE_900);
     doc.text(
-      sanitizeForPdf(`${isEn ? 'Patient' : 'Paciente'}: ${patient.name}`),
+      sanitizeForPdf(
+        `${isEn ? 'Patient' : 'Paciente'}: ${
+          patient.name || (isEn ? 'Not specified' : 'Não informado')
+        }`
+      ),
       marginX + 3,
       cursorY
-    );
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(...SLATE_700);
-    doc.text(
-      sanitizeForPdf(
-        `${isEn ? 'Record' : 'Prontuário'}: ${patient.recordNumber}`
-      ),
-      pageWidth - marginX - 3,
-      cursorY,
-      { align: 'right' }
     );
     cursorY += 4.8;
 
@@ -347,29 +294,28 @@ export class PdfReportService {
       ? 'Feminino'
       : patient.gender;
 
+    const metaParts: string[] = [];
+    if (patient.age > 0) {
+      metaParts.push(`${isEn ? 'Age' : 'Idade'}: ${patient.age} ${isEn ? 'yrs' : 'anos'}`);
+    }
+    metaParts.push(`${isEn ? 'Sex' : 'Sexo'}: ${genderText}`);
+    if (patient.roomBed) {
+      metaParts.push(`${isEn ? 'Ward/Bed' : 'Setor/Leito'}: ${patient.roomBed}`);
+    }
+
     doc.setFontSize(8.8);
     doc.setTextColor(...SLATE_500);
-    doc.text(
-      sanitizeForPdf(
-        `${isEn ? 'Age' : 'Idade'}: ${patient.age} ${
-          isEn ? 'yrs' : 'anos'
-        }  |  ${isEn ? 'Sex' : 'Sexo'}: ${genderText}${
-          patient.roomBed
-            ? `  |  ${isEn ? 'Ward/Bed' : 'Setor/Leito'}: ${patient.roomBed}`
-            : ''
-        }`
-      ),
-      marginX + 3,
-      cursorY
-    );
+    doc.text(sanitizeForPdf(metaParts.join('  |  ')), marginX + 3, cursorY);
     cursorY += 4.8;
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.8);
-    doc.setTextColor(...SLATE_700);
-    for (const line of indicationLines) {
-      doc.text(line, marginX + 3, cursorY);
-      cursorY += 4.2;
+    if (indicationLines.length > 0) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.8);
+      doc.setTextColor(...SLATE_700);
+      for (const line of indicationLines) {
+        doc.text(line, marginX + 3, cursorY);
+        cursorY += 4.2;
+      }
     }
     cursorY = boxStartY + boxHeight + 4;
 
@@ -510,7 +456,6 @@ export class PdfReportService {
         ? '4. Risk and Severity Stratification'
         : '4. Estratificação de Risco e Gravidade'
     );
-    writeLabelValue(isEn ? 'Classification' : 'Classificação', urgencyInfo.label);
     writeLabelValue(
       isEn ? 'Rationale' : 'Justificativa',
       report.urgencyRationale
@@ -645,8 +590,8 @@ export class PdfReportService {
       doc.setTextColor(...SLATE_500);
       doc.text(
         isEn
-          ? 'RadIA - Ultrasound Diagnostic Copilot | Evidence-based clinical decision support.'
-          : 'RadIA - Copiloto de Ultrassonografia | Documento de apoio ao diagnóstico médico baseado em diretrizes.',
+          ? 'UltrAI Med - Ultrasound Diagnostic Copilot | Evidence-based clinical decision support.'
+          : 'UltrAI Med - Copiloto de Ultrassonografia | Documento de apoio ao diagnóstico médico baseado em diretrizes.',
         marginX,
         pageHeight - 8.5
       );
@@ -699,8 +644,8 @@ export class PdfReportService {
     doc.setTextColor(...SLATE_900);
     doc.text(
       isEn
-        ? 'RadIA - Shift & Ultrasound Triage Summary'
-        : 'RadIA - Resumo de Plantão e Triagem USG',
+        ? 'UltrAI Med - Shift & Ultrasound Triage Summary'
+        : 'UltrAI Med - Resumo de Plantão e Triagem USG',
       marginX,
       cursorY
     );
@@ -713,10 +658,7 @@ export class PdfReportService {
       sanitizeForPdf(
         `${isEn ? 'Generated on' : 'Gerado em'} ${new Date().toLocaleDateString(
           locale
-        )} ${isEn ? 'at' : 'às'} ${new Date().toLocaleTimeString(locale, {
-          hour: '2-digit',
-          minute: '2-digit',
-        })} | ${isEn ? 'Total exams' : 'Total de exames'}: ${exams.length}`
+        )} | ${isEn ? 'Total exams' : 'Total de exames'}: ${exams.length}`
       ),
       marginX,
       cursorY
@@ -733,7 +675,6 @@ export class PdfReportService {
         cursorY = 18;
       }
 
-      const urgencyInfo = getUrgencyLabel(exam.urgency, lang);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(...SLATE_900);
@@ -741,17 +682,11 @@ export class PdfReportService {
         sanitizeForPdf(
           `${idx + 1}. ${patient.name} (${patient.age} ${
             isEn ? 'yrs' : 'anos'
-          }, ${patient.recordNumber})`
+          })`
         ),
         marginX,
         cursorY
       );
-
-      doc.setFontSize(8);
-      doc.setTextColor(...urgencyInfo.rgb);
-      doc.text(sanitizeForPdf(urgencyInfo.label), pageWidth - marginX, cursorY, {
-        align: 'right',
-      });
       cursorY += 4.5;
 
       doc.setFont('helvetica', 'normal');
@@ -781,7 +716,7 @@ export class PdfReportService {
 
     const datePart = new Date().toISOString().slice(0, 10);
     doc.save(
-      `${isEn ? 'RadIA_Shift_Summary' : 'Resumo_Plantao_RadIA'}_${datePart}.pdf`
+      `${isEn ? 'UltrAI_Med_Shift_Summary' : 'Resumo_Plantao_UltrAI_Med'}_${datePart}.pdf`
     );
   }
 

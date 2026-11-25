@@ -290,6 +290,13 @@ class StorageService {
     this.saveData(data);
   }
 
+  public setActiveSelection(patientId: string, examId: string): void {
+    const data = this.getData();
+    data.activePatientId = patientId;
+    data.activeExamId = examId;
+    this.saveData(data);
+  }
+
   public getReport(examId: string): StandardizedRadiologyReport | undefined {
     return this.getData().reports[examId];
   }

@@ -13,12 +13,12 @@ class GeminiRadiaService {
     required UltrasoundExam exam,
     required bool fastMode,
   }) {
-    final modelName = fastMode ? 'gemini-3.1-flash-lite' : 'gemini-3.8-flash';
+    final modelName = fastMode ? 'gemini-3.1-flash-lite' : 'gemini-4-hydrogen';
     final model = GenerativeModel(
       model: modelName,
       apiKey: apiKey,
       systemInstruction: Content.system(
-        'Você é o RadIA Chat, copiloto especialista em Ultrassonografia (USG). '
+        'Você é o UltrAI Med Chat, copiloto especialista em Ultrassonografia (USG). '
         'Baseie respostas exclusivamente em literatura médica atualizada (ACR TI-RADS, BI-RADS USG, '
         'Tokyo Guidelines, ATLS, EAU, CBR) considerando o histórico de ${patient.name} '
         '(${patient.age} anos, indicação: ${patient.clinicalIndication}).',
@@ -35,7 +35,7 @@ class GeminiRadiaService {
     String? findingText,
   }) async {
     final model = GenerativeModel(
-      model: 'gemini-3.8-flash',
+      model: 'gemini-4-hydrogen',
       apiKey: apiKey,
       systemInstruction: Content.system(
         'Gere um laudo radiológico padronizado em 7 seções: '

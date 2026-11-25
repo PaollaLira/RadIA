@@ -12,10 +12,39 @@ import {
   X,
   Trash2,
   Image as ImageIcon,
+  ImagePlus,
   Zap,
   Brain,
   AlertCircle,
+  Eye,
 } from 'lucide-react';
+
+async function resizeDataUrl(
+  sourceDataUrl: string,
+  maxDim: number,
+  quality = 0.86
+): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(sourceDataUrl);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(sourceDataUrl);
+    img.src = sourceDataUrl;
+  });
+}
 
 interface RadiologyChatbotProps {
   isOpen: boolean;
@@ -47,14 +76,21 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
 
   const [input, setInput] = useState('');
   const [modelMode, setModelMode] = useState<ChatModelMode>('reasoning');
+  const [chatImageDataUrl, setChatImageDataUrl] = useState<string | null>(imageDataUrl || null);
+  const [chatImageThumb, setChatImageThumb] = useState<string | null>(imageDataUrl || null);
   const [attachImage, setAttachImage] = useState<boolean>(!!imageDataUrl);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const threadEndRef = useRef<HTMLDivElement>(null);
+  const fileUploadRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setAttachImage(!!imageDataUrl);
+    if (imageDataUrl) {
+      setChatImageDataUrl(imageDataUrl);
+      resizeDataUrl(imageDataUrl, 360, 0.78).then(setChatImageThumb);
+      setAttachImage(true);
+    }
   }, [imageDataUrl]);
 
   useEffect(() => {
@@ -65,22 +101,52 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
 
   if (!isOpen) return null;
 
+  const handleChatFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const rawDataUrl = ev.target?.result as string;
+      if (!rawDataUrl) return;
+      const [fullResized, thumbResized] = await Promise.all([
+        resizeDataUrl(rawDataUrl, 1400, 0.88),
+        resizeDataUrl(rawDataUrl, 360, 0.78),
+      ]);
+      setChatImageDataUrl(fullResized);
+      setChatImageThumb(thumbResized);
+      setAttachImage(true);
+      setErrorMsg(null);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleClearChatImage = () => {
+    setChatImageDataUrl(null);
+    setChatImageThumb(null);
+    setAttachImage(false);
+  };
+
   const handleSend = async (customPrompt?: string) => {
-    const trimmed = (customPrompt ?? input).trim();
-    if (!trimmed || isSending) return;
+    const shouldAttachImage = attachImage && !!chatImageDataUrl;
+    const rawText = (customPrompt ?? input).trim();
+    const effectiveText =
+      rawText || (shouldAttachImage ? t.chat.defaultImagePrompt : '');
+
+    if (!effectiveText || isSending) return;
 
     setErrorMsg(null);
-    const shouldAttachImage = attachImage && !!imageDataUrl;
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}-u`,
       role: 'user',
-      text: trimmed,
+      text: effectiveText,
       timestamp: new Date().toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
       }),
       attachedImage: shouldAttachImage,
+      imagePreview: shouldAttachImage ? chatImageThumb || chatImageDataUrl || undefined : undefined,
     };
 
     const nextHistory = [...messages, userMsg];
@@ -94,7 +160,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
         patient: localizedPatient,
         exam: localizedExam,
         report,
-        imageDataUrl,
+        imageDataUrl: shouldAttachImage ? chatImageDataUrl : undefined,
         attachImage: shouldAttachImage,
         modelMode,
         language: lang,
@@ -112,11 +178,14 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
       };
 
       onMessagesChange([...nextHistory, assistantMsg]);
+      if (shouldAttachImage) {
+        setAttachImage(false);
+      }
     } catch (err: unknown) {
       const fallbackErr =
         lang === 'en'
-          ? 'Failed to get a response from RadIA assistant.'
-          : 'Erro ao obter resposta do assistente RadIA.';
+          ? 'Failed to get a response from UltrAI Med assistant.'
+          : 'Erro ao obter resposta do assistente UltrAI Med.';
       const message = err instanceof Error ? err.message : fallbackErr;
       setErrorMsg(message);
     } finally {
@@ -131,7 +200,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
     }
   };
 
-  const examLabel = localizedExam ? t.specialties[localizedExam.specialty] : 'USG';
+  const examLabel = localizedExam?.specialty ? t.specialties[localizedExam.specialty] : 'USG';
 
   return (
     <aside
@@ -253,6 +322,13 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200'
                 }`}
               >
+                {msg.imagePreview && (
+                  <img
+                    src={msg.imagePreview}
+                    alt={t.chat.attachedImageTag}
+                    className="w-full max-h-44 object-contain rounded-lg mb-2 bg-black/30 border border-teal-700/50"
+                  />
+                )}
                 {msg.attachedImage && (
                   <div className="flex items-center gap-1 text-[10px] text-cyan-200 mb-1 pb-1 border-b border-teal-700/60">
                     <ImageIcon className="w-3 h-3" />
@@ -262,7 +338,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
                 {msg.text}
               </div>
               <div className="mt-1 px-1 text-[10px] text-slate-400 font-mono tabular-nums flex items-center gap-1.5">
-                <span>{msg.role === 'user' ? t.chat.you : 'RadIA'}</span>
+                <span>{msg.role === 'user' ? t.chat.you : 'UltrAI Med'}</span>
                 <span aria-hidden="true">·</span>
                 <span>{msg.timestamp}</span>
               </div>
@@ -290,19 +366,68 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
-        {imageDataUrl && (
-          <label className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={attachImage}
-              onChange={(e) => setAttachImage(e.target.checked)}
-              className="rounded border-slate-300 text-teal-700 focus:ring-cyan-500"
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
+        <input
+          ref={fileUploadRef}
+          type="file"
+          accept="image/*"
+          onChange={handleChatFileChange}
+          className="hidden"
+        />
+
+        {chatImageDataUrl && (
+          <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center gap-2.5">
+            <img
+              src={chatImageThumb || chatImageDataUrl}
+              alt={t.chat.attachedPreviewLabel}
+              className="w-11 h-11 rounded-md object-cover bg-black shrink-0 border border-slate-300 dark:border-slate-600"
             />
-            <ImageIcon className="w-3.5 h-3.5 text-teal-700 dark:text-cyan-400" />
-            <span>{t.chat.attachCheckbox}</span>
-          </label>
+            <div className="min-w-0 flex-1 space-y-1">
+              <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-200 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={attachImage}
+                  onChange={(e) => setAttachImage(e.target.checked)}
+                  className="rounded border-slate-300 text-teal-700 focus:ring-cyan-500"
+                />
+                <span className="truncate">{t.chat.attachedPreviewLabel}</span>
+              </label>
+              <button
+                type="button"
+                disabled={isSending}
+                onClick={() => {
+                  setAttachImage(true);
+                  handleSend(t.chat.defaultImagePrompt);
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-800 dark:text-cyan-400 hover:underline disabled:opacity-50"
+              >
+                <Eye className="w-3 h-3" />
+                <span>{t.chat.analyzeImageQuickBtn}</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearChatImage}
+              className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
+              title={t.chat.removeImage}
+              aria-label={t.chat.removeImage}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         )}
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => fileUploadRef.current?.click()}
+            disabled={isSending}
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <ImagePlus className="w-3.5 h-3.5 text-teal-700 dark:text-cyan-400" />
+            <span>{t.chat.uploadImageBtn}</span>
+          </button>
+        </div>
 
         <div className="flex items-end gap-2">
           <textarea
@@ -315,7 +440,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
           />
           <button
             onClick={() => handleSend()}
-            disabled={!input.trim() || isSending}
+            disabled={(!input.trim() && !(attachImage && !!chatImageDataUrl)) || isSending}
             className="min-h-[44px] min-w-[44px] px-3.5 rounded-lg bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white transition-colors flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
             title="Send"
             aria-label="Send message"

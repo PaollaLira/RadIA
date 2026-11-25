@@ -2,13 +2,14 @@ import React from 'react';
 import { Patient } from '../../types/patient';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { localizePatient } from '../../i18n/demoLocalization';
-import { User, History, AlertTriangle, Pill, Activity, Calendar } from 'lucide-react';
+import { User, History, AlertTriangle, Pill, Activity, Calendar, MessageSquare } from 'lucide-react';
 
 interface PatientHistoryCardProps {
   patient: Patient;
+  onOpenChat?: () => void;
 }
 
-export const PatientHistoryCard: React.FC<PatientHistoryCardProps> = ({ patient }) => {
+export const PatientHistoryCard: React.FC<PatientHistoryCardProps> = ({ patient, onOpenChat }) => {
   const { lang, t } = useLanguage();
   const localized = localizePatient(patient, lang);
 
@@ -38,10 +39,6 @@ export const PatientHistoryCard: React.FC<PatientHistoryCardProps> = ({ patient 
             <span>
               {t.patientCard.genderLabel}: {genderLabel}
             </span>
-            <span aria-hidden="true">·</span>
-            <span className="font-mono tabular-nums">
-              {t.patientCard.record}: {localized.recordNumber}
-            </span>
             {localized.roomBed && (
               <>
                 <span aria-hidden="true">·</span>
@@ -53,31 +50,34 @@ export const PatientHistoryCard: React.FC<PatientHistoryCardProps> = ({ patient 
           </div>
         </div>
 
-        {localized.renalFunction && (
-          <div className="text-right text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-lg px-2.5 py-1.5">
-            <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-semibold">
-              {t.patientCard.renalFunction}
-            </span>
-            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-              Cr: {localized.renalFunction.creatinine} mg/dL
-            </span>
-            {localized.renalFunction.eGFR && (
-              <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-1">
-                (eGFR: {localized.renalFunction.eGFR})
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+        <div className="flex flex-wrap items-center sm:items-end sm:flex-col gap-2">
+          {onOpenChat && (
+            <button
+              type="button"
+              onClick={onOpenChat}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 text-teal-900 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 transition-colors inline-flex items-center gap-1.5 shrink-0"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>{t.station.discussRadia}</span>
+            </button>
+          )}
 
-      {/* Clinical Indication */}
-      <div className="mt-3.5">
-        <span className="text-[11px] uppercase tracking-wider text-teal-800 dark:text-cyan-400 font-bold block mb-1">
-          {t.patientCard.clinicalIndication}
-        </span>
-        <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
-          {localized.clinicalIndication}
-        </p>
+          {localized.renalFunction && (
+            <div className="text-right text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-lg px-2.5 py-1.5">
+              <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-semibold">
+                {t.patientCard.renalFunction}
+              </span>
+              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                Cr: {localized.renalFunction.creatinine} mg/dL
+              </span>
+              {localized.renalFunction.eGFR && (
+                <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-1">
+                  (eGFR: {localized.renalFunction.eGFR})
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Grid: Comorbidities, Allergies, Medications */}

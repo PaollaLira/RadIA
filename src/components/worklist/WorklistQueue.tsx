@@ -181,7 +181,7 @@ export const WorklistQueue: React.FC<WorklistQueueProps> = ({
 
                   <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500 dark:text-slate-400">
                     <span className="font-medium text-teal-800 dark:text-cyan-400">
-                      USG {specialtyNames[exam.specialty]}
+                      USG {exam.specialty ? specialtyNames[exam.specialty] : 'Geral'}
                     </span>
                     <span aria-hidden="true">·</span>
                     <span>

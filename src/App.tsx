@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storageService } from './services/storageService';
 import { aiRadiologyEngine } from './services/aiRadiologyEngine';
 import { Patient } from './types/patient';
@@ -10,17 +10,18 @@ import { useLanguage } from './i18n/LanguageContext';
 import { localizePatient, localizeExam } from './i18n/demoLocalization';
 
 import { TopNavBar } from './components/common/TopNavBar';
-import { WorklistQueue } from './components/worklist/WorklistQueue';
-import { PatientHistoryCard } from './components/worklist/PatientHistoryCard';
 import { FindingInputArea } from './components/forms/FindingInputArea';
 import { UltrasoundViewer } from './components/viewer/UltrasoundViewer';
 import { StructuredReportView } from './components/report/StructuredReportView';
 import { CameraModal } from './components/camera/CameraModal';
-import { NewPatientExamModal } from './components/modal/NewPatientExamModal';
 import { DataManagementModal } from './components/modal/DataManagementModal';
 import { RadiologyChatbot } from './components/chat/RadiologyChatbot';
+import { MeasurementsReferenceView } from './components/measurements/MeasurementsReferenceView';
+import { AuthAndPaywallScreen } from './components/auth/AuthAndPaywallScreen';
+import { authService } from './services/authService';
+import { AuthSession } from './types/auth';
 
-import { Activity, Camera, Upload, MessageSquare, AlertCircle } from 'lucide-react';
+import { Activity, MessageSquare, AlertCircle } from 'lucide-react';
 
 export default function App() {
   const { lang, t } = useLanguage();
@@ -33,24 +34,28 @@ export default function App() {
   const [activeReport, setActiveReport] = useState<StandardizedRadiologyReport | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
+  // Autenticação e Assinatura (protótipo local sem backend)
+  const [session, setSession] = useState<AuthSession | null>(() => authService.getSession());
+  const [showPaywallUpgrade, setShowPaywallUpgrade] = useState<boolean>(false);
+
   // Navegação e modais
-  const [activeTab, setActiveTab] = useState<'worklist' | 'diagnostic' | 'backup'>('worklist');
+  const [activeTab, setActiveTab] = useState<'diagnostic' | 'measurements' | 'backup'>('diagnostic');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
-  const [isNewExamModalOpen, setIsNewExamModalOpen] = useState<boolean>(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   // Estado da Estação de Laudo
   const [inputMode, setInputMode] = useState<'CAMERA_IMAGE' | 'TEXT_FINDING'>('TEXT_FINDING');
+  const [patientName, setPatientName] = useState<string>('');
+  const [patientAge, setPatientAge] = useState<string>('');
+  const [patientGender, setPatientGender] = useState<'M' | 'F' | 'Outro'>('F');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [specialty, setSpecialty] = useState<UltrasoundSpecialty>('ABDOMEN');
-  const [transducer, setTransducer] = useState<TransducerType>('CONVEX');
+  const [specialty, setSpecialty] = useState<UltrasoundSpecialty | ''>('ABDOMEN');
+  const [transducer, setTransducer] = useState<TransducerType | ''>('CONVEX');
   const [findingText, setFindingText] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-
-  const inlineUploadRef = useRef<HTMLInputElement>(null);
 
   // Carregamento inicial do Storage
   useEffect(() => {
@@ -92,9 +97,14 @@ export default function App() {
     if (!rawExam) return;
 
     const localized = localizeExam(rawExam, lang);
+    const resolvedPatientId = patientId || rawExam.patientId;
+    const rawPatient = storageService.getPatientById(resolvedPatientId);
 
     setActiveExamId(examId);
-    setActivePatientId(patientId || rawExam.patientId);
+    setActivePatientId(resolvedPatientId);
+    setPatientName(rawPatient?.name || '');
+    setPatientAge(rawPatient?.age && rawPatient.age > 0 ? String(rawPatient.age) : '');
+    setPatientGender(rawPatient?.gender || 'F');
 
     setSpecialty(rawExam.specialty);
     setTransducer(rawExam.transducer);
@@ -120,11 +130,6 @@ export default function App() {
     });
   };
 
-  const handleSelectExam = (examId: string, patientId: string) => {
-    loadExamState(examId, patientId);
-    setActiveTab('diagnostic');
-  };
-
   const applyImageToActiveExam = (imageDataUrl: string) => {
     setCapturedImage(imageDataUrl);
     setInputMode('CAMERA_IMAGE');
@@ -143,20 +148,6 @@ export default function App() {
     setActiveTab('diagnostic');
   };
 
-  const handleInlineFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      if (dataUrl) {
-        applyImageToActiveExam(dataUrl);
-      }
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
   const handleAnalyzeAndGenerateReport = async () => {
     const rawPatient = patients.find((p) => p.id === activePatientId);
     const currentExam = exams.find((e) => e.id === activeExamId);
@@ -166,7 +157,34 @@ export default function App() {
       return;
     }
 
-    const localizedPatientForAi = localizePatient(rawPatient, lang);
+    const trimmedPatientName = patientName.trim();
+    const parsedAge = Number(patientAge);
+    const sanitizedAge =
+      patientAge.trim() !== '' && Number.isFinite(parsedAge) && parsedAge > 0
+        ? Math.min(120, Math.round(parsedAge))
+        : 0;
+    const hasPatientChanges =
+      trimmedPatientName !== rawPatient.name ||
+      sanitizedAge !== rawPatient.age ||
+      patientGender !== rawPatient.gender;
+
+    const patientForAnalysis: Patient = hasPatientChanges
+      ? {
+          ...rawPatient,
+          name: trimmedPatientName,
+          age: sanitizedAge,
+          gender: patientGender,
+        }
+      : rawPatient;
+
+    if (hasPatientChanges) {
+      storageService.savePatient(patientForAnalysis);
+      setPatients((prev) =>
+        prev.map((p) => (p.id === patientForAnalysis.id ? patientForAnalysis : p))
+      );
+    }
+
+    const localizedPatientForAi = localizePatient(patientForAnalysis, lang);
 
     setIsAnalyzing(true);
     setAnalysisError(null);
@@ -189,11 +207,16 @@ export default function App() {
         language: lang,
       });
 
+      if (session) {
+        report.radiologistName = session.name;
+        report.crm = session.crm;
+      }
+
       storageService.saveReport(report);
       setActiveReport(report);
       setExams(storageService.getExams());
     } catch (err: unknown) {
-      console.error('Erro na análise diagnóstica com RadIA:', err);
+      console.error('Erro na análise diagnóstica com UltrAI Med:', err);
       const message =
         err instanceof Error ? err.message : t.station.genericError;
       setAnalysisError(message);
@@ -202,11 +225,58 @@ export default function App() {
     }
   };
 
-  const handleSaveNewPatient = (newPatient: Patient, newExam: UltrasoundExam) => {
+  const handleNewBlankReport = () => {
+    const now = Date.now();
+    const nowIso = new Date(now).toISOString();
+    const newPatientId = `pat-${now}`;
+    const newExamId = `exam-${now}`;
+
+    const newPatient: Patient = {
+      id: newPatientId,
+      name: '',
+      age: 0,
+      gender: 'F',
+      recordNumber: '',
+      clinicalIndication: '',
+      admissionDate: nowIso,
+      priorExams: [],
+      comorbidities: [],
+      allergies: [],
+      currentMedications: [],
+    };
+
+    const newExam: UltrasoundExam = {
+      id: newExamId,
+      patientId: newPatientId,
+      specialty: '',
+      urgency: 'ELECTIVE',
+      status: 'PENDING',
+      transducer: '',
+      manualFindingText: '',
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+
     storageService.savePatient(newPatient);
     storageService.saveExam(newExam);
-    refreshData();
-    loadExamState(newExam.id, newPatient.id);
+    storageService.setActiveSelection(newPatientId, newExamId);
+
+    setPatients(storageService.getPatients());
+    setExams(storageService.getExams());
+    setActivePatientId(newPatientId);
+    setActiveExamId(newExamId);
+    setPatientName('');
+    setPatientAge('');
+    setPatientGender('F');
+    setSpecialty('');
+    setTransducer('');
+    setCapturedImage(null);
+    setFindingText('');
+    setInputMode('TEXT_FINDING');
+    setActiveReport(null);
+    setChatMessages([]);
+    setAnalysisError(null);
+    setIsChatOpen(false);
     setActiveTab('diagnostic');
   };
 
@@ -224,20 +294,108 @@ export default function App() {
     }
   };
 
+  const handlePatientNameChange = (nextName: string) => {
+    setPatientName(nextName);
+    const trimmed = nextName.trim();
+    const currentPat = patients.find((p) => p.id === activePatientId) || patients[0];
+    if (!currentPat) return;
+    const updatedPatient: Patient = {
+      ...currentPat,
+      name: trimmed,
+    };
+    storageService.savePatient(updatedPatient);
+    setPatients((prev) =>
+      prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
+    );
+  };
+
+  const handlePatientAgeChange = (nextAge: string) => {
+    setPatientAge(nextAge);
+    const parsed = Number(nextAge);
+    const sanitizedAge =
+      nextAge.trim() !== '' && Number.isFinite(parsed) && parsed > 0
+        ? Math.min(120, Math.round(parsed))
+        : 0;
+    const currentPat = patients.find((p) => p.id === activePatientId) || patients[0];
+    if (!currentPat) return;
+    const updatedPatient: Patient = {
+      ...currentPat,
+      age: sanitizedAge,
+    };
+    storageService.savePatient(updatedPatient);
+    setPatients((prev) =>
+      prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
+    );
+  };
+
+  const handlePatientGenderChange = (nextGender: 'M' | 'F' | 'Outro') => {
+    setPatientGender(nextGender);
+    const currentPat = patients.find((p) => p.id === activePatientId) || patients[0];
+    if (!currentPat) return;
+    const updatedPatient: Patient = {
+      ...currentPat,
+      gender: nextGender,
+    };
+    storageService.savePatient(updatedPatient);
+    setPatients((prev) =>
+      prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
+    );
+  };
+
+  const handleSpecialtyChange = (nextSpecialty: UltrasoundSpecialty | '') => {
+    setSpecialty(nextSpecialty);
+    const targetId = activeExamId || exams[0]?.id;
+    const currentEx = targetId ? storageService.getExamById(targetId) : undefined;
+    if (!currentEx) return;
+    const updatedExam: UltrasoundExam = {
+      ...currentEx,
+      specialty: nextSpecialty,
+      updatedAt: new Date().toISOString(),
+    };
+    storageService.saveExam(updatedExam);
+    setExams(storageService.getExams());
+  };
+
+  const handleTransducerChange = (nextTransducer: TransducerType | '') => {
+    setTransducer(nextTransducer);
+    const targetId = activeExamId || exams[0]?.id;
+    const currentEx = targetId ? storageService.getExamById(targetId) : undefined;
+    if (!currentEx) return;
+    const updatedExam: UltrasoundExam = {
+      ...currentEx,
+      transducer: nextTransducer,
+      updatedAt: new Date().toISOString(),
+    };
+    storageService.saveExam(updatedExam);
+    setExams(storageService.getExams());
+  };
+
   const activePatient = patients.find((p) => p.id === activePatientId) || patients[0];
   const activeExam = exams.find((e) => e.id === activeExamId) || exams[0];
   const localizedActivePatient = activePatient ? localizePatient(activePatient, lang) : undefined;
 
-  const pendingCount = exams.filter((e) => e.status !== 'REPORTED').length;
-  const emergencyCount = exams.filter((e) => e.urgency === 'EMERGENCY' || e.urgency === 'URGENT').length;
+  const handleLogout = () => {
+    authService.logout();
+    setSession(null);
+    setShowPaywallUpgrade(false);
+    setIsChatOpen(false);
+  };
 
-  const activeGenderLabel = localizedActivePatient
-    ? localizedActivePatient.gender === 'M'
-      ? t.patientCard.male
-      : localizedActivePatient.gender === 'F'
-        ? t.patientCard.female
-        : t.patientCard.other
-    : '';
+  if (!session || showPaywallUpgrade) {
+    return (
+      <AuthAndPaywallScreen
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={handleToggleDarkMode}
+        initialMode={showPaywallUpgrade ? 'payment' : 'login'}
+        existingSession={session}
+        onCancelUpgrade={() => setShowPaywallUpgrade(false)}
+        onAuthenticated={(nextSession) => {
+          setSession(nextSession);
+          setShowPaywallUpgrade(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
@@ -253,167 +411,61 @@ export default function App() {
         }}
         isDarkMode={isDarkMode}
         onToggleDarkMode={handleToggleDarkMode}
-        pendingCount={pendingCount}
-        emergencyCount={emergencyCount}
-        onNewExam={() => setIsNewExamModalOpen(true)}
-        isChatOpen={isChatOpen}
-        onToggleChat={() => setIsChatOpen((prev) => !prev)}
+        onNewExam={handleNewBlankReport}
+        session={session}
+        onOpenSubscription={() => setShowPaywallUpgrade(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main View Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-        {/* VIEW 1: Worklist de Triagem */}
-        {activeTab === 'worklist' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8">
-              <WorklistQueue
-                patients={patients}
-                exams={exams}
-                activeExamId={activeExamId}
-                onSelectExam={handleSelectExam}
-                onNewExam={() => setIsNewExamModalOpen(true)}
-              />
-            </div>
-
-            <div className="lg:col-span-4 space-y-4">
-              {activePatient ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">
-                      {t.worklist.activeRecord}
-                    </span>
-                    <button
-                      onClick={() => setActiveTab('diagnostic')}
-                      className="text-xs font-semibold text-teal-700 dark:text-cyan-400 hover:underline"
-                    >
-                      {t.worklist.openStation}
-                    </button>
-                  </div>
-                  <PatientHistoryCard patient={activePatient} />
-                </>
-              ) : (
-                <div className="p-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-slate-400 text-xs">
-                  {t.worklist.selectPrompt}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* VIEW 2: Estação de Trabalho Radiológica */}
-        {activeTab === 'diagnostic' && localizedActivePatient && activeExam && (
-          <div className="space-y-6">
-            {/* Top Patient Strip & Quick Switch */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-teal-800 dark:bg-teal-700 text-cyan-300 flex items-center justify-center font-bold text-sm">
-                  USG
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
-                      {localizedActivePatient.name}
-                    </h2>
-                    <span className="text-xs text-slate-500 font-mono">
-                      ({localizedActivePatient.recordNumber})
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
-                    <span>
-                      {localizedActivePatient.age} {t.patientCard.years} · {activeGenderLabel}
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span className="font-medium text-teal-800 dark:text-cyan-400">
-                      {t.station.examLabel}: {t.specialties[specialty]}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => setIsChatOpen(true)}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 text-teal-900 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 transition-colors flex items-center gap-1.5"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>{t.station.discussRadia}</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('worklist')}
-                  className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
-                >
-                  {t.station.changePatient}
-                </button>
-              </div>
-            </div>
-
-            {/* Split Grid: Histórico & Visualizador / Formulário & Laudo */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Coluna Esquerda */}
-              <div className="lg:col-span-5 space-y-6">
-                {capturedImage ? (
+        {activeTab === 'measurements' ? (
+          <MeasurementsReferenceView />
+        ) : (
+          localizedActivePatient &&
+          activeExam && (
+            <div className="space-y-6">
+              {/* Split Grid: Visualizador (quando houver imagem) / Formulário & Laudo */}
+              <div
+              className={
+                capturedImage
+                  ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'
+                  : 'max-w-4xl mx-auto space-y-6'
+              }
+            >
+              {/* Coluna Esquerda (somente quando há imagem carregada) */}
+              {capturedImage && (
+                <div className="lg:col-span-5 space-y-6">
                   <UltrasoundViewer
                     imageUrl={capturedImage}
-                    examTitle={`USG ${t.specialties[specialty]} — ${localizedActivePatient.name}`}
+                    examTitle={`USG ${specialty ? t.specialties[specialty] : (lang === 'en' ? 'General' : 'Geral')} — ${localizedActivePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
                     onRetakeOrUpload={() => setIsCameraOpen(true)}
                   />
-                ) : (
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 text-center space-y-3">
-                    <input
-                      ref={inlineUploadRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleInlineFileUpload}
-                      className="hidden"
-                    />
-                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mx-auto">
-                      <Camera className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                        {t.station.noImageTitle}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1">
-                        {t.station.noImageDesc}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <button
-                        onClick={() => inlineUploadRef.current?.click()}
-                        className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 border border-slate-200 dark:border-slate-700"
-                      >
-                        <Upload className="w-4 h-4 text-teal-700 dark:text-cyan-400" />
-                        <span>{t.station.uploadDevice}</span>
-                      </button>
-                      <button
-                        onClick={() => setIsCameraOpen(true)}
-                        className="px-3.5 py-2 rounded-lg bg-teal-800 hover:bg-teal-700 text-white text-xs font-semibold inline-flex items-center gap-1.5"
-                      >
-                        <Camera className="w-4 h-4" />
-                        <span>{t.station.openCamera}</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                </div>
+              )}
 
-                <PatientHistoryCard patient={localizedActivePatient} />
-              </div>
-
-              {/* Coluna Direita */}
-              <div className="lg:col-span-7 space-y-6">
+              {/* Coluna Principal */}
+              <div className={capturedImage ? 'lg:col-span-7 space-y-6' : 'space-y-6'}>
                 <FindingInputArea
                   inputMode={inputMode}
                   onChangeInputMode={setInputMode}
+                  patientName={patientName}
+                  onChangePatientName={handlePatientNameChange}
+                  patientAge={patientAge}
+                  onChangePatientAge={handlePatientAgeChange}
+                  patientGender={patientGender}
+                  onChangePatientGender={handlePatientGenderChange}
                   specialty={specialty}
-                  onChangeSpecialty={setSpecialty}
+                  onChangeSpecialty={handleSpecialtyChange}
                   transducer={transducer}
-                  onChangeTransducer={setTransducer}
+                  onChangeTransducer={handleTransducerChange}
                   textFinding={findingText}
                   onChangeTextFinding={setFindingText}
                   hasCapturedImage={!!capturedImage}
                   onOpenLiveCamera={() => setIsCameraOpen(true)}
                   onAnalyze={handleAnalyzeAndGenerateReport}
                   isAnalyzing={isAnalyzing}
+                  onOpenChat={() => setIsChatOpen(true)}
                 />
 
                 {analysisError && (
@@ -453,11 +505,12 @@ export default function App() {
               </div>
             </div>
           </div>
+          )
         )}
       </main>
 
-      {/* Botão flutuante para abrir o Chatbot quando fechado */}
-      {!isChatOpen && (
+      {/* Botão flutuante para abrir o Chatbot quando fechado (apenas na aba de Laudo) */}
+      {activeTab === 'diagnostic' && !isChatOpen && (
         <button
           onClick={() => setIsChatOpen(true)}
           className="no-print fixed bottom-5 right-5 z-40 px-4 py-3 rounded-full bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white shadow-xl flex items-center gap-2 text-xs font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98]"
@@ -486,13 +539,6 @@ export default function App() {
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         onCapture={applyImageToActiveExam}
-      />
-
-      {/* Modal de Cadastro de Novo Paciente / Exame */}
-      <NewPatientExamModal
-        isOpen={isNewExamModalOpen}
-        onClose={() => setIsNewExamModalOpen(false)}
-        onSave={handleSaveNewPatient}
       />
 
       {/* Modal de Exportação Clínica e Dados Locais */}

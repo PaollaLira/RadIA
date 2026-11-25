@@ -94,7 +94,7 @@ class _RadiologyChatbotSheetState extends State<RadiologyChatbotSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'RadIA Chat Clínico',
+                'UltrAI Med Chat Clínico',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               SwitchListTile(

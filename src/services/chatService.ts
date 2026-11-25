@@ -37,14 +37,30 @@ export class ChatService {
       }),
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Falha ao consultar o assistente RadIA.');
+    const rawBody = await response.text();
+    let data: { reply?: string; modelUsed?: string; error?: string } = {};
+    try {
+      data = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      data = {};
+    }
+
+    if (!response.ok || !data.reply) {
+      throw new Error(
+        data.error ||
+          (response.status === 503
+            ? params.language === 'en'
+              ? 'The AI service is temporarily experiencing high demand. Please wait a few seconds and try again.'
+              : 'O serviço de IA está temporariamente com alta demanda. Aguarde alguns segundos e tente novamente.'
+            : params.language === 'en'
+              ? 'Failed to communicate with UltrAI Med assistant.'
+              : 'Falha ao consultar o assistente UltrAI Med.')
+      );
     }
 
     return {
       reply: data.reply,
-      modelUsed: data.modelUsed,
+      modelUsed: data.modelUsed || '',
     };
   }
 }
