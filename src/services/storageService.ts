@@ -15,7 +15,7 @@ export interface StorageData {
 const STORAGE_KEY = 'radia_clinical_store_v1';
 
 // Casos clínicos pré-configurados de ultrassonografia com histórico rico
-export const INITIAL_PATIENTS: Patient[] = [
+const INITIAL_PATIENTS: Patient[] = [
   {
     id: 'pat-001',
     name: 'Roberto Carlos Silveira',
@@ -23,7 +23,6 @@ export const INITIAL_PATIENTS: Patient[] = [
     gender: 'M',
     recordNumber: 'HC-2026-9081',
     clinicalIndication: 'Dor súbita intensa em hipocôndrio direito irradiada para dorso há 12h, febre (38.4°C), vômitos e leucocitose (16.200/mm³).',
-    admissionDate: '2026-11-10 08:30',
     roomBed: 'Pronto-Socorro Adulto - Leito 04',
     comorbidities: ['Diabetes Mellitus tipo 2', 'Hipertensão Arterial Sistêmica', 'Dislipidemia'],
     allergies: ['Dipirona (broncoespasmo)'],
@@ -35,12 +34,10 @@ export const INITIAL_PATIENTS: Patient[] = [
     },
     priorExams: [
       {
-        id: 'prior-001-a',
         date: '2024-08-15',
         modality: 'USG',
         region: 'Abdome Superior',
         summary: 'Esteatose hepática moderada (grau II). Vesícula biliar contendo microlitíase móvel, paredes finas (2.1 mm), sem sinais de colecistite.',
-        keyFindings: ['Esteatose hepática grau II', 'Microlitíase biliar sem colecistite'],
       },
     ],
   },
@@ -51,7 +48,6 @@ export const INITIAL_PATIENTS: Patient[] = [
     gender: 'F',
     recordNumber: 'HC-2026-7412',
     clinicalIndication: 'Nódulo palpável indolor em terço inferior do lobo tireoidiano direito, detectado em consulta ginecológica.',
-    admissionDate: '2026-11-09 14:15',
     roomBed: 'Ambulatório de Especialidades - Sala 02',
     comorbidities: ['Hipotireoidismo subclínico'],
     allergies: ['Sem alergias medicamentosas relatadas'],
@@ -63,12 +59,10 @@ export const INITIAL_PATIENTS: Patient[] = [
     },
     priorExams: [
       {
-        id: 'prior-002-a',
         date: '2024-05-10',
         modality: 'USG',
         region: 'Tireoide e Cervical',
         summary: 'Glândula tireoide de dimensões anatômicas. Presença de dois pequenos cistos coloides em lobo esquerdo (< 3 mm). Lobo direito homogêneo sem nódulos identificáveis.',
-        keyFindings: ['Cistos coloides em lobo esquerdo', 'Lobo direito normal sem lesões focais'],
       },
     ],
   },
@@ -79,7 +73,6 @@ export const INITIAL_PATIENTS: Patient[] = [
     gender: 'M',
     recordNumber: 'HC-2026-3190',
     clinicalIndication: 'Politrauma por colisão moto x anteparo, dor abdominal difusa, taquicardia (124 bpm), sudorese fria, PA 85/50 mmHg.',
-    admissionDate: '2026-11-10 10:45',
     roomBed: 'Sala Vermelha / Choque - Leito 01',
     comorbidities: ['Hígido previamente'],
     allergies: ['Não informadas (paciente torporoso)'],
@@ -93,19 +86,16 @@ export const INITIAL_PATIENTS: Patient[] = [
     gender: 'F',
     recordNumber: 'HC-2026-1184',
     clinicalIndication: 'Rastreamento de mamas densas (composição mamográfica heterogênea tipo C). Assintomática.',
-    admissionDate: '2026-11-08 11:00',
     roomBed: 'Centro de Diagnóstico por Imagem',
     comorbidities: ['Osteopenia'],
     allergies: ['Iodo (reação urticariforme prévia)'],
     currentMedications: ['Carbonato de Cálcio + Vitamina D'],
     priorExams: [
       {
-        id: 'prior-004-a',
         date: '2025-10-12',
         modality: 'MAMOGRAFIA',
         region: 'Mamas Bilateral',
         summary: 'Mamas densas de distribuição difusa. Sem calcificações pleomórficas suspeitas ou distorções arquiteturais. Sugerida complementação ultrassonográfica.',
-        keyFindings: ['Padrão de alta densidade mamária (Tipo C)', 'BI-RADS 0 por densidade'],
       },
     ],
   },
@@ -116,7 +106,6 @@ export const INITIAL_PATIENTS: Patient[] = [
     gender: 'M',
     recordNumber: 'HC-2026-8854',
     clinicalIndication: 'Cólica nefrética súbita à esquerda de forte intensidade, associada a hematúria macroscópica e náuseas incoercíveis.',
-    admissionDate: '2026-11-10 07:15',
     roomBed: 'Pronto Atendimento - Box 08',
     comorbidities: ['Gota úrica', 'Dislipidemia', 'Hiperplasia Prostática Benigna (HPB)'],
     allergies: ['Sulfa'],
@@ -128,18 +117,16 @@ export const INITIAL_PATIENTS: Patient[] = [
     },
     priorExams: [
       {
-        id: 'prior-005-a',
         date: '2023-11-02',
         modality: 'USG',
         region: 'Aparelho Urinário',
         summary: 'Rins tópicos com limites conservados. Microlitíases não obstrutivas em cálice inferior direito (3 mm) e esquerdo (4 mm). Ausência de hidronefrose à época.',
-        keyFindings: ['Microlitíase renal bilateral não obstrutiva'],
       },
     ],
   },
 ];
 
-export const INITIAL_EXAMS: UltrasoundExam[] = [
+const INITIAL_EXAMS: UltrasoundExam[] = [
   {
     id: 'exam-001',
     patientId: 'pat-001',
@@ -148,8 +135,6 @@ export const INITIAL_EXAMS: UltrasoundExam[] = [
     status: 'IN_PROGRESS',
     transducer: 'CONVEX',
     manualFindingText: 'Vesícula biliar distendida, cálculo impactado no infundíbulo medindo 19 mm com sombra acústica posterior. Parede espessada medindo 5.4 mm com halo hipoecogênico e líquido pericolecístico. Sinal de Murphy ultrassonográfico positivo.',
-    createdAt: '2026-11-10 08:45',
-    updatedAt: '2026-11-10 09:00',
   },
   {
     id: 'exam-002',
@@ -159,8 +144,6 @@ export const INITIAL_EXAMS: UltrasoundExam[] = [
     status: 'PENDING',
     transducer: 'LINEAR',
     manualFindingText: 'Nódulo sólido marcadamente hipoecoico em terço médio do lobo direito da tireoide, medindo 15 x 11 x 13 mm. Relação mais alto que largo, margens microlobuladas e microcalcificações internas puntiformes.',
-    createdAt: '2026-11-09 14:30',
-    updatedAt: '2026-11-09 14:30',
   },
   {
     id: 'exam-003',
@@ -170,8 +153,6 @@ export const INITIAL_EXAMS: UltrasoundExam[] = [
     status: 'IN_PROGRESS',
     transducer: 'SECTOR',
     manualFindingText: 'E-FAST Trauma: Lâmina líquida anecoica franca em recesso hepatorrenal de Morrison (espessura 16 mm) e lâmina em recesso esplenorrenal. Janela pericárdica livre e deslizamento pleural preservado bilateralmente.',
-    createdAt: '2026-11-10 10:50',
-    updatedAt: '2026-11-10 10:52',
   },
   {
     id: 'exam-004',
@@ -181,8 +162,6 @@ export const INITIAL_EXAMS: UltrasoundExam[] = [
     status: 'REPORTED',
     transducer: 'LINEAR',
     manualFindingText: 'Nódulo anecoico oval, circunscrito, de paredes finas, reforço acústico posterior límpido, no quadrante superior externo da mama esquerda (posição 2h), medindo 8 x 5 mm. Sem vascularização ao Doppler.',
-    createdAt: '2026-11-08 11:15',
-    updatedAt: '2026-11-08 11:40',
   },
   {
     id: 'exam-005',
@@ -192,8 +171,6 @@ export const INITIAL_EXAMS: UltrasoundExam[] = [
     status: 'PENDING',
     transducer: 'CONVEX',
     manualFindingText: 'Moderada a importante ectasia pielocalicinal no rim esquerdo. Imagem hiperecogênica com 8 mm no terço distal do ureter esquerdo / junção ureterovesical, produzindo sombra acústica e artefato de cintilação.',
-    createdAt: '2026-11-10 07:30',
-    updatedAt: '2026-11-10 07:30',
   },
 ];
 
@@ -275,10 +252,6 @@ class StorageService {
     return this.getData().exams.find((e) => e.id === id);
   }
 
-  public getExamsForPatient(patientId: string): UltrasoundExam[] {
-    return this.getData().exams.filter((e) => e.patientId === patientId);
-  }
-
   public saveExam(exam: UltrasoundExam): void {
     const data = this.getData();
     const index = data.exams.findIndex((e) => e.id === exam.id);
@@ -309,7 +282,6 @@ class StorageService {
     if (exam) {
       exam.status = 'REPORTED';
       exam.urgency = report.urgencyLevel;
-      exam.updatedAt = new Date().toISOString();
     }
     this.saveData(data);
   }
@@ -333,25 +305,6 @@ class StorageService {
     if (data.chatHistories) {
       delete data.chatHistories[examId];
       this.saveData(data);
-    }
-  }
-
-  public exportBackupJson(): string {
-    const data = this.getData();
-    return JSON.stringify(data, null, 2);
-  }
-
-  public importBackupJson(jsonString: string): boolean {
-    try {
-      const parsed = JSON.parse(jsonString) as StorageData;
-      if (Array.isArray(parsed.patients) && Array.isArray(parsed.exams)) {
-        this.saveData(parsed);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('JSON de backup inválido:', err);
-      return false;
     }
   }
 

@@ -27,16 +27,6 @@ export type UltrasoundSpecialty =
 
 export type TransducerType = 'CONVEX' | 'LINEAR' | 'SECTOR' | 'ENDOCAVITARY';
 
-export interface UltrasoundPreset {
-  id: UltrasoundSpecialty;
-  name: string;
-  shortName: string;
-  defaultTransducer: TransducerType;
-  commonIndications: string[];
-  referenceClassification?: string; // ex: ACR TI-RADS, BI-RADS USG, Bosniak
-  typicalFindingsShortcuts: string[];
-}
-
 export interface UltrasoundExam {
   id: string;
   patientId: string;
@@ -46,6 +36,4 @@ export interface UltrasoundExam {
   transducer: TransducerType | '';
   capturedImageUrl?: string;
   manualFindingText?: string;
-  createdAt: string;
-  updatedAt: string;
 }

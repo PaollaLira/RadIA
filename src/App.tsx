@@ -145,7 +145,6 @@ export default function App() {
       const exam = storageService.getExamById(targetExamId);
       if (exam) {
         exam.capturedImageUrl = imageDataUrl;
-        exam.updatedAt = new Date().toISOString();
         storageService.saveExam(exam);
         setExams(storageService.getExams());
       }
@@ -201,7 +200,6 @@ export default function App() {
         transducer,
         manualFindingText: findingText,
         capturedImageUrl: capturedImage || undefined,
-        updatedAt: new Date().toISOString(),
       };
       storageService.saveExam(updatedExam);
 
@@ -232,7 +230,6 @@ export default function App() {
 
   const handleNewBlankReport = () => {
     const now = Date.now();
-    const nowIso = new Date(now).toISOString();
     const newPatientId = `pat-${now}`;
     const newExamId = `exam-${now}`;
 
@@ -243,7 +240,6 @@ export default function App() {
       gender: 'F',
       recordNumber: '',
       clinicalIndication: '',
-      admissionDate: nowIso,
       priorExams: [],
       comorbidities: [],
       allergies: [],
@@ -258,8 +254,6 @@ export default function App() {
       status: 'PENDING',
       transducer: '',
       manualFindingText: '',
-      createdAt: nowIso,
-      updatedAt: nowIso,
     };
 
     storageService.savePatient(newPatient);
@@ -355,7 +349,6 @@ export default function App() {
     const updatedExam: UltrasoundExam = {
       ...currentEx,
       specialty: nextSpecialty,
-      updatedAt: new Date().toISOString(),
     };
     storageService.saveExam(updatedExam);
     setExams(storageService.getExams());
@@ -369,7 +362,6 @@ export default function App() {
     const updatedExam: UltrasoundExam = {
       ...currentEx,
       transducer: nextTransducer,
-      updatedAt: new Date().toISOString(),
     };
     storageService.saveExam(updatedExam);
     setExams(storageService.getExams());

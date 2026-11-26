@@ -12,13 +12,11 @@ const EN_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Metformin 850mg BID', 'Losartan 50mg/day'],
     priorExams: [
       {
-        id: 'prior-001-a',
         date: '2024-08-15',
         modality: 'USG',
         region: 'Upper Abdomen',
         summary:
           'Moderate hepatic steatosis (Grade II). Gallbladder with mobile microlithiasis, thin walls (2.1 mm), no signs of cholecystitis.',
-        keyFindings: ['Grade II hepatic steatosis', 'Biliary microlithiasis without cholecystitis'],
       },
     ],
   },
@@ -31,13 +29,11 @@ const EN_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Levothyroxine 50 mcg/day fasting'],
     priorExams: [
       {
-        id: 'prior-002-a',
         date: '2024-05-10',
         modality: 'USG',
         region: 'Thyroid & Neck',
         summary:
           'Normal thyroid dimensions. Two small colloid cysts in the left lobe (< 3 mm). Homogeneous right lobe without focal nodules.',
-        keyFindings: ['Left lobe colloid cysts', 'Normal right lobe without focal lesions'],
       },
     ],
   },
@@ -58,13 +54,11 @@ const EN_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Calcium Carbonate + Vitamin D'],
     priorExams: [
       {
-        id: 'prior-004-a',
         date: '2025-10-12',
         modality: 'MAMOGRAFIA',
         region: 'Bilateral Breasts',
         summary:
           'Diffusely dense breasts. No suspicious pleomorphic calcifications or architectural distortion. Supplemental ultrasound recommended.',
-        keyFindings: ['Dense breast pattern (Type C)', 'BI-RADS 0 due to density'],
       },
     ],
   },
@@ -77,13 +71,11 @@ const EN_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Allopurinol 100mg/day', 'Tamsulosin 0.4mg/day'],
     priorExams: [
       {
-        id: 'prior-005-a',
         date: '2023-11-02',
         modality: 'USG',
         region: 'Urinary Tract',
         summary:
           'Normal kidney position and contours. Non-obstructing lower pole microlithiasis on right (3 mm) and left (4 mm). No hydronephrosis.',
-        keyFindings: ['Non-obstructing bilateral renal microlithiasis'],
       },
     ],
   },
@@ -99,13 +91,11 @@ const ES_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Metformina 850 mg c/12 h', 'Losartán 50 mg/día'],
     priorExams: [
       {
-        id: 'prior-001-a',
         date: '2024-08-15',
         modality: 'USG',
         region: 'Abdomen Superior',
         summary:
           'Esteatosis hepática moderada (grado II). Vesícula biliar con microlitiasis móvil, paredes finas (2,1 mm), sin signos de colecistitis.',
-        keyFindings: ['Esteatosis hepática grado II', 'Microlitiasis biliar sin colecistitis'],
       },
     ],
   },
@@ -118,13 +108,11 @@ const ES_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Levotiroxina 50 mcg/día en ayunas'],
     priorExams: [
       {
-        id: 'prior-002-a',
         date: '2024-05-10',
         modality: 'USG',
         region: 'Tiroides y Cervical',
         summary:
           'Glándula tiroides de dimensiones conservadas. Dos pequeños quistes coloides en lóbulo izquierdo (< 3 mm). Lóbulo derecho homogéneo sin nódulos focales.',
-        keyFindings: ['Quistes coloides en lóbulo izquierdo', 'Lóbulo derecho normal sin lesiones focales'],
       },
     ],
   },
@@ -145,13 +133,11 @@ const ES_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Carbonato de Calcio + Vitamina D'],
     priorExams: [
       {
-        id: 'prior-004-a',
         date: '2025-10-12',
         modality: 'MAMOGRAFIA',
         region: 'Mamas Bilateral',
         summary:
           'Mamas difusamente densas. Sin microcalcificaciones pleomórficas sospechosas ni distorsión arquitectural. Se sugiere ultrasonido complementario.',
-        keyFindings: ['Patrón mamario denso (Tipo C)', 'BI-RADS 0 por densidad'],
       },
     ],
   },
@@ -164,13 +150,11 @@ const ES_PATIENTS: Record<string, Partial<Patient>> = {
     currentMedications: ['Alopurinol 100 mg/día', 'Tamsulosina 0,4 mg/día'],
     priorExams: [
       {
-        id: 'prior-005-a',
         date: '2023-11-02',
         modality: 'USG',
         region: 'Aparato Urinario',
         summary:
           'Riñones tópicos con contornos conservados. Microlitiasis no obstructiva en polo inferior derecho (3 mm) e izquierdo (4 mm). Sin hidronefrosis.',
-        keyFindings: ['Microlitiasis renal bilateral no obstructiva'],
       },
     ],
   },

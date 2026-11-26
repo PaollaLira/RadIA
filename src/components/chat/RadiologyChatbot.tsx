@@ -155,7 +155,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
     setIsSending(true);
 
     try {
-      const { reply, modelUsed } = await ChatService.sendMessage({
+      const { reply } = await ChatService.sendMessage({
         messages: nextHistory,
         patient: localizedPatient,
         exam: localizedExam,
@@ -174,7 +174,6 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
           hour: '2-digit',
           minute: '2-digit',
         }),
-        modelUsed,
       };
 
       onMessagesChange([...nextHistory, assistantMsg]);

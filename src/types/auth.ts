@@ -8,12 +8,10 @@ export interface PhysicianAccount {
   crm: string;
   email: string;
   password: string; // Armazenado localmente apenas na fase protótipo sem backend
-  trialStartedAt: string;
   trialEndsAt: string;
   subscriptionStatus: SubscriptionStatus;
   subscriptionEndsAt?: string;
   plan?: SubscriptionPlan;
-  createdAt: string;
 }
 
 export interface AuthSession {
@@ -22,9 +20,6 @@ export interface AuthSession {
   crm: string;
   email: string;
   subscriptionStatus: SubscriptionStatus;
-  trialEndsAt: string;
-  subscriptionEndsAt?: string;
-  plan?: SubscriptionPlan;
   daysRemaining: number;
 }
 
@@ -33,7 +28,6 @@ export interface ExpiredAccountPreview {
   name: string;
   crm: string;
   email: string;
-  trialEndsAt: string;
 }
 
 export type LoginResult =

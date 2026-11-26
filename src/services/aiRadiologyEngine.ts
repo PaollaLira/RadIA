@@ -61,20 +61,15 @@ export class AiRadiologyEngine {
     const now = new Date().toISOString();
 
     const report: StandardizedRadiologyReport = {
-      id: `rep-${Date.now()}`,
       examId: exam.id,
-      patientId: patient.id,
       createdAt: now,
-      updatedAt: now,
       urgencyLevel: r.urgencyLevel || 'PRIORITY',
       urgencyRationale: r.urgencyRationale || '',
-      inputModeUsed: options.inputMode,
       technique: r.technique,
       findings: r.findings || [],
       diagnosticImpression: r.diagnosticImpression,
       riskStratification: r.riskStratification,
       medicalLiterature: r.medicalLiterature || [],
-      signedByRadiologist: false,
     };
 
     return report;

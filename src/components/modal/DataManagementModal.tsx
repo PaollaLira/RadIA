@@ -146,7 +146,7 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
               onClose();
             }}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-            aria-label={t.newPatientModal.cancel}
+            aria-label={t.dataModal.close}
           >
             <X className="w-5 h-5" />
           </button>

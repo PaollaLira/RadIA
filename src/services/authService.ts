@@ -26,10 +26,8 @@ function buildInitialAccounts(): PhysicianAccount[] {
       crm: 'CRM/SP 148920',
       email: 'dra.demo@ultraimed.com',
       password: '123456',
-      trialStartedAt: new Date(now).toISOString(),
       trialEndsAt: new Date(now + TRIAL_DAYS * DAY_MS).toISOString(),
       subscriptionStatus: 'trial',
-      createdAt: new Date(now).toISOString(),
     },
     {
       id: 'doc-expired-demo',
@@ -37,10 +35,8 @@ function buildInitialAccounts(): PhysicianAccount[] {
       crm: 'CRM/RJ 529104',
       email: 'expirado@ultraimed.com',
       password: '123456',
-      trialStartedAt: new Date(now - 5 * DAY_MS).toISOString(),
       trialEndsAt: new Date(now - 2 * DAY_MS).toISOString(),
       subscriptionStatus: 'expired',
-      createdAt: new Date(now - 5 * DAY_MS).toISOString(),
     },
   ];
 }
@@ -128,9 +124,6 @@ class AuthService {
       crm: account.crm,
       email: account.email,
       subscriptionStatus: status,
-      trialEndsAt: account.trialEndsAt,
-      subscriptionEndsAt: account.subscriptionEndsAt,
-      plan: account.plan,
       daysRemaining,
     };
   }
@@ -187,7 +180,6 @@ class AuthService {
           name: account.name,
           crm: account.crm,
           email: account.email,
-          trialEndsAt: account.trialEndsAt,
         },
         message:
           lang === 'en'
@@ -280,10 +272,8 @@ class AuthService {
       crm,
       email,
       password,
-      trialStartedAt: new Date(now).toISOString(),
       trialEndsAt: new Date(now + TRIAL_DAYS * DAY_MS).toISOString(),
       subscriptionStatus: 'trial',
-      createdAt: new Date(now).toISOString(),
     };
 
     store.accounts.unshift(newAccount);
@@ -311,19 +301,6 @@ class AuthService {
     this.saveStore(store);
 
     return this.toSession(account, 'active', durationDays);
-  }
-
-  public simulateExpireActiveTrial(): void {
-    const store = this.getStore();
-    if (!store.activeAccountId) return;
-    const account = store.accounts.find((a) => a.id === store.activeAccountId);
-    if (!account) return;
-    const now = Date.now();
-    account.subscriptionStatus = 'expired';
-    account.trialEndsAt = new Date(now - DAY_MS).toISOString();
-    account.subscriptionEndsAt = undefined;
-    store.activeAccountId = null;
-    this.saveStore(store);
   }
 
   public logout(): void {

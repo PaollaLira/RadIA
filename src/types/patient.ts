@@ -1,10 +1,8 @@
 export interface PriorExam {
-  id: string;
   date: string;
   modality: 'USG' | 'TC' | 'RM' | 'MAMOGRAFIA';
   region: string;
   summary: string;
-  keyFindings: string[];
 }
 
 export interface Patient {
@@ -14,7 +12,6 @@ export interface Patient {
   gender: 'M' | 'F' | 'Outro';
   recordNumber: string; // Número do prontuário
   clinicalIndication: string; // Queixa principal / hipótese diagnóstica
-  admissionDate: string;
   roomBed?: string;
   priorExams: PriorExam[];
   comorbidities: string[];

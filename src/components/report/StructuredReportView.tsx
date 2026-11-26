@@ -69,10 +69,10 @@ export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
 
   const genderLabel =
     localizedPatient.gender === 'M'
-      ? t.patientCard.male
+      ? t.report.male
       : localizedPatient.gender === 'F'
-        ? t.patientCard.female
-        : t.patientCard.other;
+        ? t.report.female
+        : t.report.other;
 
   const handleCopyFormattedText = () => {
     const patientFallback =
@@ -209,8 +209,6 @@ Laudo emitido com suporte do UltrAI Med (Diretrizes Internacionais de Ultrassono
       ...editableReport,
       radiologistName: physicianName,
       crm: physicianCRM,
-      signedByRadiologist: true,
-      updatedAt: new Date().toISOString(),
     };
     if (onUpdateReport) {
       onUpdateReport(updated);

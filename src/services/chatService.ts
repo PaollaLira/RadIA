@@ -14,7 +14,7 @@ export class ChatService {
     attachImage?: boolean;
     modelMode: ChatModelMode;
     language?: AppLanguage;
-  }): Promise<{ reply: string; modelUsed: string }> {
+  }): Promise<{ reply: string }> {
     const lang = params.language || 'pt';
     const reportSummary = params.report
       ? `Diagnóstico Principal: ${params.report.diagnosticImpression.primaryDiagnosis} | Urgência: ${params.report.urgencyLevel} | Conduta: ${params.report.riskStratification.actionRecommendation}`
@@ -39,7 +39,7 @@ export class ChatService {
     });
 
     const rawBody = await response.text();
-    let data: { reply?: string; modelUsed?: string; error?: string } = {};
+    let data: { reply?: string; error?: string } = {};
     try {
       data = rawBody ? JSON.parse(rawBody) : {};
     } catch {
@@ -65,7 +65,6 @@ export class ChatService {
 
     return {
       reply: data.reply,
-      modelUsed: data.modelUsed || '',
     };
   }
 }

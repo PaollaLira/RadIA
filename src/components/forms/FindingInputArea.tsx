@@ -452,9 +452,9 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
             onChange={(e) => onChangePatientGender(e.target.value as 'M' | 'F' | 'Outro')}
             className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           >
-            <option value="F">{t.patientCard.female}</option>
-            <option value="M">{t.patientCard.male}</option>
-            <option value="Outro">{t.patientCard.other}</option>
+            <option value="F">{t.report.female}</option>
+            <option value="M">{t.report.male}</option>
+            <option value="Outro">{t.report.other}</option>
           </select>
         </div>
       </div>

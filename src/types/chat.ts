@@ -7,5 +7,4 @@ export interface ChatMessage {
   timestamp: string;
   attachedImage?: boolean;
   imagePreview?: string;
-  modelUsed?: string;
 }

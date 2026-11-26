@@ -63,7 +63,6 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
           name: existingSession.name,
           crm: existingSession.crm,
           email: existingSession.email,
-          trialEndsAt: existingSession.trialEndsAt,
         }
       : null
   );
@@ -152,7 +151,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0 bg-[#09142B]">
               <img
-                src="/assets/aistudio/Gemini_Generated_Image_vykld6vykld6vykl__1__cda2de72.jfif"
+                src="/assets/ultrai-med-icon.jfif"
                 alt="UltrAI Med"
                 className="w-full h-full object-cover scale-[1.12]"
               />
@@ -194,7 +193,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
             <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 text-center space-y-2">
               <div className="w-14 h-14 mx-auto rounded-2xl overflow-hidden shadow-md bg-[#09142B]">
                 <img
-                  src="/assets/aistudio/Gemini_Generated_Image_vykld6vykld6vykl__1__cda2de72.jfif"
+                  src="/assets/ultrai-med-icon.jfif"
                   alt="UltrAI Med"
                   className="w-full h-full object-cover scale-[1.12]"
                 />

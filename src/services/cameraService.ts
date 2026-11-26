@@ -9,14 +9,6 @@ class CameraService {
   private currentFacingMode: 'environment' | 'user' = 'environment';
   private torchState = false;
 
-  public async isCameraSupported(): Promise<boolean> {
-    return !!(
-      typeof navigator !== 'undefined' &&
-      navigator.mediaDevices &&
-      typeof navigator.mediaDevices.getUserMedia === 'function'
-    );
-  }
-
   public async startCamera(
     videoElement: HTMLVideoElement,
     facingMode: 'environment' | 'user' = 'environment'

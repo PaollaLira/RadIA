@@ -37,7 +37,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           >
             <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0 bg-[#09142B]">
               <img
-                src="/assets/aistudio/Gemini_Generated_Image_vykld6vykld6vykl__1__cda2de72.jfif"
+                src="/assets/ultrai-med-icon.jfif"
                 alt="UltrAI Med"
                 className="w-full h-full object-cover scale-[1.12]"
               />
