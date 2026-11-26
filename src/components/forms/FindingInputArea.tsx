@@ -2,7 +2,7 @@ import React from 'react';
 import { UltrasoundSpecialty, TransducerType } from '../../types/ultrasound';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { AppLanguage } from '../../i18n/translations';
-import { Camera, FileText, Sparkles, CheckCircle, Wand2, User, MessageSquare } from 'lucide-react';
+import { Camera, FileText, CheckCircle, Wand2, User, MessageSquare } from 'lucide-react';
 import { BrandLoader } from '../common/BrandLoader';
 
 interface FindingInputAreaProps {
@@ -604,10 +604,7 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
               <span>{t.findingInput.processing}</span>
             </>
           ) : (
-            <>
-              <Sparkles className="w-4 h-4 text-cyan-300" />
-              <span>{t.findingInput.generateBtn}</span>
-            </>
+            <span>{t.findingInput.generateBtn}</span>
           )}
         </button>
 
