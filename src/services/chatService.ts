@@ -15,6 +15,7 @@ export class ChatService {
     modelMode: ChatModelMode;
     language?: AppLanguage;
   }): Promise<{ reply: string; modelUsed: string }> {
+    const lang = params.language || 'pt';
     const reportSummary = params.report
       ? `Diagnóstico Principal: ${params.report.diagnosticImpression.primaryDiagnosis} | Urgência: ${params.report.urgencyLevel} | Conduta: ${params.report.riskStratification.actionRecommendation}`
       : undefined;
@@ -33,7 +34,7 @@ export class ChatService {
         imageDataUrl: params.attachImage ? params.imageDataUrl : undefined,
         attachImage: !!params.attachImage,
         modelMode: params.modelMode,
-        language: params.language || 'pt',
+        language: lang,
       }),
     });
 
@@ -49,11 +50,15 @@ export class ChatService {
       throw new Error(
         data.error ||
           (response.status === 503
-            ? params.language === 'en'
+            ? lang === 'en'
               ? 'The AI service is temporarily experiencing high demand. Please wait a few seconds and try again.'
+              : lang === 'es'
+              ? 'El servicio de IA tiene alta demanda temporalmente. Espere unos segundos e inténtelo de nuevo.'
               : 'O serviço de IA está temporariamente com alta demanda. Aguarde alguns segundos e tente novamente.'
-            : params.language === 'en'
+            : lang === 'en'
               ? 'Failed to communicate with UltrAI Med assistant.'
+              : lang === 'es'
+              ? 'Error al comunicarse con el asistente UltrAI Med.'
               : 'Falha ao consultar o assistente UltrAI Med.')
       );
     }

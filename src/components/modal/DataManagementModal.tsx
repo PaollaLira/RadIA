@@ -63,7 +63,13 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
       report: activeReport,
       patient: localizedActivePatient,
       physicianName: activeReport.radiologistName || t.report.defaultPhysician,
-      physicianCRM: activeReport.crm || (lang === 'en' ? 'MD / License 123456' : 'CRM/UF 123456'),
+      physicianCRM:
+        activeReport.crm ||
+        (lang === 'en'
+          ? 'MD / License 123456'
+          : lang === 'es'
+            ? 'Matrícula / Col. 123456'
+            : 'CRM/UF 123456'),
       imageDataUrl: activeImageDataUrl || activeExam?.capturedImageUrl,
       lang,
     });

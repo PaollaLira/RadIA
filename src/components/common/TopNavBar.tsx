@@ -35,11 +35,11 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => onSelectTab('diagnostic')}
           >
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0 bg-[#054A46]">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0 bg-[#09142B]">
               <img
-                src="/assets/aistudio/Gemini_Generated_Image_i9cl7oi9cl7oi9cl_4fdc7ed6.jfif"
+                src="/assets/aistudio/Gemini_Generated_Image_vykld6vykld6vykl__1__cda2de72.jfif"
                 alt="UltrAI Med"
-                className="w-full h-full object-cover scale-[1.08]"
+                className="w-full h-full object-cover scale-[1.12]"
               />
             </div>
             <div>
@@ -97,12 +97,15 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               title={
                 lang === 'en'
                   ? 'Free trial active — click to subscribe'
-                  : 'Período grátis ativo — clique para assinar'
+                  : lang === 'es'
+                    ? 'Prueba gratuita activa — clic para suscribirse'
+                    : 'Período grátis ativo — clique para assinar'
               }
             >
               <Sparkles className="w-3 h-3" />
               <span>
-                {session.daysRemaining}d {lang === 'en' ? 'trial' : 'grátis'}
+                {session.daysRemaining}d{' '}
+                {lang === 'en' ? 'trial' : lang === 'es' ? 'gratis' : 'grátis'}
               </span>
             </button>
           )}
@@ -110,8 +113,8 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           <button
             onClick={toggleLang}
             className="px-2 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
-            title={lang === 'pt' ? t.nav.switchToEnglish : t.nav.switchToPortuguese}
-            aria-label={lang === 'pt' ? t.nav.switchToEnglish : t.nav.switchToPortuguese}
+            title={t.nav.switchLanguage}
+            aria-label={t.nav.switchLanguage}
           >
             <Globe className="w-3.5 h-3.5 text-teal-700 dark:text-cyan-400" />
             <span className="font-mono uppercase">{lang}</span>
@@ -142,9 +145,13 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               title={
                 lang === 'en'
                   ? `Sign out (${session.name})`
-                  : `Sair / Trocar conta (${session.name})`
+                  : lang === 'es'
+                    ? `Cerrar sesión / Cambiar cuenta (${session.name})`
+                    : `Sair / Trocar conta (${session.name})`
               }
-              aria-label={lang === 'en' ? 'Sign out' : 'Sair'}
+              aria-label={
+                lang === 'en' ? 'Sign out' : lang === 'es' ? 'Cerrar sesión' : 'Sair'
+              }
             >
               <LogOut className="w-4 h-4" />
             </button>

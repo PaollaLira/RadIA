@@ -70,8 +70,13 @@ export default function App() {
     if (!rawExam) return;
     const ptDefault = rawExam.manualFindingText || '';
     const enLocalized = localizeExam(rawExam, 'en').manualFindingText || '';
-    // Só substitui se o texto atual corresponder exatamente ao texto padrão em PT ou EN (preserva edições customizadas)
-    if (findingText === ptDefault || findingText === enLocalized) {
+    const esLocalized = localizeExam(rawExam, 'es').manualFindingText || '';
+    // Só substitui se o texto atual corresponder exatamente ao texto padrão em PT, EN ou ES (preserva edições customizadas)
+    if (
+      findingText === ptDefault ||
+      findingText === enLocalized ||
+      findingText === esLocalized
+    ) {
       setFindingText(localizeExam(rawExam, lang).manualFindingText || '');
     }
   }, [lang, activeExamId]);
@@ -438,7 +443,7 @@ export default function App() {
                 <div className="lg:col-span-5 space-y-6">
                   <UltrasoundViewer
                     imageUrl={capturedImage}
-                    examTitle={`USG ${specialty ? t.specialties[specialty] : (lang === 'en' ? 'General' : 'Geral')} — ${localizedActivePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
+                    examTitle={`USG ${specialty ? t.specialties[specialty] : lang === 'pt' ? 'Geral' : 'General'} — ${localizedActivePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
                     onRetakeOrUpload={() => setIsCameraOpen(true)}
                   />
                 </div>

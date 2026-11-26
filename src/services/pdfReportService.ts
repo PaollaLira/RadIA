@@ -6,7 +6,7 @@ import { AppLanguage } from '../i18n/translations';
 
 /**
  * Normaliza símbolos especiais que não existem na tabela WinAnsi padrão das fontes embutidas do jsPDF,
- * preservando integralmente os acentos da língua portuguesa (ç, ã, õ, á, é, í, ó, ú, ê, ô).
+ * preservando integralmente os acentos do português e do espanhol.
  */
 function sanitizeForPdf(text: string | undefined | null): string {
   if (!text) return '';
@@ -59,6 +59,10 @@ function slugifyName(name: string): string {
     .replace(/^_|_$/g, '');
 }
 
+function tr(lang: AppLanguage, pt: string, en: string, es: string): string {
+  return lang === 'en' ? en : lang === 'es' ? es : pt;
+}
+
 export class PdfReportService {
   /**
    * Exporta o laudo completo em PDF A4 (com a imagem ecográfica anexada, caso exista).
@@ -79,8 +83,7 @@ export class PdfReportService {
       imageDataUrl,
       lang = 'pt',
     } = params;
-    const isEn = lang === 'en';
-    const locale = isEn ? 'en-US' : 'pt-BR';
+    const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -213,9 +216,12 @@ export class PdfReportService {
     doc.setFontSize(8);
     doc.setTextColor(...TEAL);
     doc.text(
-      isEn
-        ? 'DIAGNOSTIC IMAGING CENTER - ULTRASOUND MEDICAL REPORT'
-        : 'CENTRO DE DIAGNÓSTICO POR IMAGEM - RELATÓRIO DE ULTRASSONOGRAFIA',
+      tr(
+        lang,
+        'CENTRO DE DIAGNÓSTICO POR IMAGEM - RELATÓRIO DE ULTRASSONOGRAFIA',
+        'DIAGNOSTIC IMAGING CENTER - ULTRASOUND MEDICAL REPORT',
+        'CENTRO DE DIAGNÓSTICO POR IMAGEN - INFORME DE ULTRASONOGRAFÍA'
+      ),
       marginX,
       cursorY
     );
@@ -228,7 +234,9 @@ export class PdfReportService {
     doc.setFontSize(8);
     doc.setTextColor(...SLATE_500);
     doc.text(
-      sanitizeForPdf(`${isEn ? 'Issued' : 'Emissão'}: ${examDateFormatted}`),
+      sanitizeForPdf(
+        `${tr(lang, 'Emissão', 'Issued', 'Emisión')}: ${examDateFormatted}`
+      ),
       pageWidth - marginX,
       cursorY,
       { align: 'right' }
@@ -239,9 +247,12 @@ export class PdfReportService {
     doc.setFontSize(15);
     doc.setTextColor(...SLATE_900);
     doc.text(
-      isEn
-        ? 'Diagnostic Ultrasound Medical Report'
-        : 'Laudo Médico de Ultrassonografia',
+      tr(
+        lang,
+        'Laudo Médico de Ultrassonografia',
+        'Diagnostic Ultrasound Medical Report',
+        'Informe Médico de Ultrasonografía'
+      ),
       marginX,
       cursorY
     );
@@ -256,9 +267,12 @@ export class PdfReportService {
     const indicationLines = patient.clinicalIndication?.trim()
       ? (doc.splitTextToSize(
           sanitizeForPdf(
-            `${isEn ? 'Clinical Indication' : 'Indicação Clínica'}: ${
-              patient.clinicalIndication
-            }`
+            `${tr(
+              lang,
+              'Indicação Clínica',
+              'Clinical Indication',
+              'Indicación Clínica'
+            )}: ${patient.clinicalIndication}`
           ),
           contentWidth - 6
         ) as string[])
@@ -273,8 +287,9 @@ export class PdfReportService {
     doc.setTextColor(...SLATE_900);
     doc.text(
       sanitizeForPdf(
-        `${isEn ? 'Patient' : 'Paciente'}: ${
-          patient.name || (isEn ? 'Not specified' : 'Não informado')
+        `${tr(lang, 'Paciente', 'Patient', 'Paciente')}: ${
+          patient.name ||
+          tr(lang, 'Não informado', 'Not specified', 'No especificado')
         }`
       ),
       marginX + 3,
@@ -282,25 +297,31 @@ export class PdfReportService {
     );
     cursorY += 4.8;
 
-    const genderText = isEn
-      ? patient.gender === 'M'
-        ? 'Male'
+    const genderText =
+      patient.gender === 'M'
+        ? tr(lang, 'Masculino', 'Male', 'Masculino')
         : patient.gender === 'F'
-        ? 'Female'
-        : patient.gender
-      : patient.gender === 'M'
-      ? 'Masculino'
-      : patient.gender === 'F'
-      ? 'Feminino'
-      : patient.gender;
+        ? tr(lang, 'Feminino', 'Female', 'Femenino')
+        : tr(lang, 'Outro', 'Other', 'Otro');
 
     const metaParts: string[] = [];
     if (patient.age > 0) {
-      metaParts.push(`${isEn ? 'Age' : 'Idade'}: ${patient.age} ${isEn ? 'yrs' : 'anos'}`);
+      metaParts.push(
+        `${tr(lang, 'Idade', 'Age', 'Edad')}: ${patient.age} ${tr(
+          lang,
+          'anos',
+          'yrs',
+          'años'
+        )}`
+      );
     }
-    metaParts.push(`${isEn ? 'Sex' : 'Sexo'}: ${genderText}`);
+    metaParts.push(`${tr(lang, 'Sexo', 'Sex', 'Sexo')}: ${genderText}`);
     if (patient.roomBed) {
-      metaParts.push(`${isEn ? 'Ward/Bed' : 'Setor/Leito'}: ${patient.roomBed}`);
+      metaParts.push(
+        `${tr(lang, 'Setor/Leito', 'Ward/Bed', 'Servicio/Cama')}: ${
+          patient.roomBed
+        }`
+      );
     }
 
     doc.setFontSize(8.8);
@@ -326,9 +347,12 @@ export class PdfReportService {
       const normalized = await normalizeImageToJpeg(imageDataUrl);
       if (normalized) {
         drawSectionHeader(
-          isEn
-            ? 'Ultrasound Photographic Record'
-            : 'Registro Fotográfico Ecográfico'
+          tr(
+            lang,
+            'Registro Fotográfico Ecográfico',
+            'Ultrasound Photographic Record',
+            'Registro Fotográfico Ecográfico'
+          )
         );
         const maxImgWidth = contentWidth * 0.72;
         const maxImgHeight = 68;
@@ -353,27 +377,32 @@ export class PdfReportService {
     // 1. TÉCNICA E PROTOCOLO
     // ========================
     drawSectionHeader(
-      isEn ? '1. Technique and Exam Protocol' : '1. Técnica e Protocolo do Exame'
+      tr(
+        lang,
+        '1. Técnica e Protocolo do Exame',
+        '1. Technique and Exam Protocol',
+        '1. Técnica y Protocolo del Estudio'
+      )
     );
     writeLabelValue(
-      isEn ? 'Exam Performed' : 'Exame Realizado',
+      tr(lang, 'Exame Realizado', 'Exam Performed', 'Estudio Realizado'),
       report.technique.protocolName
     );
     writeLabelValue(
-      isEn ? 'Transducer' : 'Transdutor',
+      tr(lang, 'Transdutor', 'Transducer', 'Transductor'),
       report.technique.transducerType
     );
     writeLabelValue(
-      isEn ? 'Acoustic Windows' : 'Janelas Acústicas',
+      tr(lang, 'Janelas Acústicas', 'Acoustic Windows', 'Ventanas Acústicas'),
       report.technique.acousticWindows
     );
     writeLabelValue(
-      isEn ? 'Patient Preparation' : 'Preparo do Paciente',
+      tr(lang, 'Preparo do Paciente', 'Patient Preparation', 'Preparación del Paciente'),
       report.technique.patientPreparation
     );
     if (report.technique.technicalLimitations) {
       writeLabelValue(
-        isEn ? 'Technical Conditions' : 'Condições Técnicas',
+        tr(lang, 'Condições Técnicas', 'Technical Conditions', 'Condiciones Técnicas'),
         report.technique.technicalLimitations
       );
     }
@@ -382,9 +411,12 @@ export class PdfReportService {
     // 2. ACHADOS RADIOLÓGICOS
     // ========================
     drawSectionHeader(
-      isEn
-        ? '2. Detailed Radiological Findings'
-        : '2. Achados Radiológicos Detalhados'
+      tr(
+        lang,
+        '2. Achados Radiológicos Detalhados',
+        '2. Detailed Radiological Findings',
+        '2. Hallazgos Radiológicos Detallados'
+      )
     );
     report.findings.forEach((finding) => {
       ensureSpace(12);
@@ -408,23 +440,31 @@ export class PdfReportService {
     // 3. IMPRESSÃO DIAGNÓSTICA
     // ========================
     drawSectionHeader(
-      isEn
-        ? '3. Diagnostic Impression and Differential Diagnosis'
-        : '3. Impressão Diagnóstica e Diagnóstico Diferencial'
+      tr(
+        lang,
+        '3. Impressão Diagnóstica e Diagnóstico Diferencial',
+        '3. Diagnostic Impression and Differential Diagnosis',
+        '3. Impresión Diagnóstica y Diagnóstico Diferencial'
+      )
     );
     writeLabelValue(
-      isEn ? 'Primary Diagnosis' : 'Diagnóstico Principal',
+      tr(lang, 'Diagnóstico Principal', 'Primary Diagnosis', 'Diagnóstico Principal'),
       report.diagnosticImpression.primaryDiagnosis
     );
     if (report.diagnosticImpression.classificationScore) {
       writeLabelValue(
-        isEn ? 'Score / Classification' : 'Classificação / Escore',
+        tr(lang, 'Classificação / Escore', 'Score / Classification', 'Clasificación / Escala'),
         report.diagnosticImpression.classificationScore
       );
     }
     if (report.diagnosticImpression.differentialDiagnoses.length > 0) {
       writeWrappedText(
-        isEn ? 'Differential Diagnoses:' : 'Diagnósticos Diferenciais:',
+        tr(
+          lang,
+          'Diagnósticos Diferenciais:',
+          'Differential Diagnoses:',
+          'Diagnósticos Diferenciales:'
+        ),
         {
           fontSize: 9.2,
           bold: true,
@@ -443,7 +483,12 @@ export class PdfReportService {
     }
     if (report.diagnosticImpression.comparativeEvolution) {
       writeLabelValue(
-        isEn ? 'Prior History Comparison' : 'Comparação com Histórico Anterior',
+        tr(
+          lang,
+          'Comparação com Histórico Anterior',
+          'Prior History Comparison',
+          'Comparación con Antecedentes Previos'
+        ),
         report.diagnosticImpression.comparativeEvolution
       );
     }
@@ -452,12 +497,15 @@ export class PdfReportService {
     // 4. ESTRATIFICAÇÃO DE RISCO
     // ========================
     drawSectionHeader(
-      isEn
-        ? '4. Risk and Severity Stratification'
-        : '4. Estratificação de Risco e Gravidade'
+      tr(
+        lang,
+        '4. Estratificação de Risco e Gravidade',
+        '4. Risk and Severity Stratification',
+        '4. Estratificación de Riesgo y Gravedad'
+      )
     );
     writeLabelValue(
-      isEn ? 'Rationale' : 'Justificativa',
+      tr(lang, 'Justificativa', 'Rationale', 'Justificación'),
       report.urgencyRationale
     );
     if (
@@ -465,76 +513,31 @@ export class PdfReportService {
       report.riskStratification.clinicalFlags.length > 0
     ) {
       writeLabelValue(
-        isEn ? 'Clinical Red Flags' : 'Sinais de Alerta',
+        tr(lang, 'Sinais de Alerta', 'Clinical Red Flags', 'Signos de Alarma'),
         report.riskStratification.clinicalFlags.join('; ')
       );
     }
     writeLabelValue(
-      isEn ? 'Immediate Recommended Management' : 'Conduta Imediata Sugerida',
+      tr(
+        lang,
+        'Conduta Imediata Sugerida',
+        'Immediate Recommended Management',
+        'Conducta Inmediata Sugerida'
+      ),
       report.riskStratification.actionRecommendation
     );
 
     // ========================
-    // 5. ESPECIALISTAS RECOMENDADOS
-    // ========================
-    if (report.recommendedSpecialists.length > 0) {
-      drawSectionHeader(
-        isEn
-          ? '5. Recommended Specialist Referrals'
-          : '5. Especialistas Recomendados para Encaminhamento'
-      );
-      report.recommendedSpecialists.forEach((spec) => {
-        writeWrappedText(`${spec.specialty} [${spec.timeframe}]`, {
-          fontSize: 9.2,
-          bold: true,
-          color: SLATE_900,
-          spacingAfter: 0.6,
-        });
-        writeWrappedText(spec.rationale, {
-          fontSize: 9,
-          indent: 2,
-          spacingAfter: 2,
-        });
-      });
-    }
-
-    // ========================
-    // 6. EXAMES COMPLEMENTARES
-    // ========================
-    if (report.complementaryExams.length > 0) {
-      drawSectionHeader(
-        isEn
-          ? '6. Suggested Complementary Exams and Workup'
-          : '6. Exames Complementares Sugeridos e Conduta'
-      );
-      report.complementaryExams.forEach((examItem) => {
-        writeWrappedText(`${examItem.examName} (${examItem.urgency})`, {
-          fontSize: 9.2,
-          bold: true,
-          color: SLATE_900,
-          spacingAfter: 0.6,
-        });
-        writeWrappedText(
-          `${isEn ? 'Justification' : 'Justificativa'}: ${
-            examItem.clinicalJustification
-          }`,
-          {
-            fontSize: 9,
-            indent: 2,
-            spacingAfter: 2,
-          }
-        );
-      });
-    }
-
-    // ========================
-    // 7. LITERATURA MÉDICA
+    // 5. LITERATURA MÉDICA
     // ========================
     if (report.medicalLiterature.length > 0) {
       drawSectionHeader(
-        isEn
-          ? '7. Medical Literature and Updated Guidelines'
-          : '7. Embasamento em Literatura Médica e Diretrizes Atualizadas'
+        tr(
+          lang,
+          '5. Embasamento em Literatura Médica e Diretrizes Atualizadas',
+          '5. Medical Literature and Updated Guidelines',
+          '5. Respaldo en Literatura Médica y Guías Actualizadas'
+        )
       );
       report.medicalLiterature.forEach((lit) => {
         writeWrappedText(
@@ -589,23 +592,31 @@ export class PdfReportService {
       doc.setFontSize(7.5);
       doc.setTextColor(...SLATE_500);
       doc.text(
-        isEn
-          ? 'UltrAI Med - Ultrasound Diagnostic Copilot | Evidence-based clinical decision support.'
-          : 'UltrAI Med - Copiloto de Ultrassonografia | Documento de apoio ao diagnóstico médico baseado em diretrizes.',
+        tr(
+          lang,
+          'UltrAI Med - Copiloto de Ultrassonografia | Documento de apoio ao diagnóstico médico baseado em diretrizes.',
+          'UltrAI Med - Ultrasound Diagnostic Copilot | Evidence-based clinical decision support.',
+          'UltrAI Med - Copiloto de Ultrasonografía | Apoyo al diagnóstico médico basado en evidencia.'
+        ),
         marginX,
         pageHeight - 8.5
       );
       doc.text(
-        `${isEn ? 'Page' : 'Página'} ${i} ${isEn ? 'of' : 'de'} ${totalPages}`,
+        `${tr(lang, 'Página', 'Page', 'Página')} ${i} ${tr(
+          lang,
+          'de',
+          'of',
+          'de'
+        )} ${totalPages}`,
         pageWidth - marginX,
         pageHeight - 8.5,
         { align: 'right' }
       );
     }
 
-    const safeName = slugifyName(patient.name);
+    const safeName = slugifyName(patient.name || 'Paciente');
     const datePart = new Date(report.createdAt).toISOString().slice(0, 10);
-    const prefix = isEn ? 'USG_Report' : 'Laudo_USG';
+    const prefix = tr(lang, 'Laudo_USG', 'USG_Report', 'Informe_USG');
 
     doc.save(`${prefix}_${safeName}_${datePart}.pdf`);
   }
@@ -620,8 +631,7 @@ export class PdfReportService {
     lang?: AppLanguage;
   }): void {
     const { patients, exams, reports, lang = 'pt' } = params;
-    const isEn = lang === 'en';
-    const locale = isEn ? 'en-US' : 'pt-BR';
+    const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -643,9 +653,12 @@ export class PdfReportService {
     doc.setFontSize(14);
     doc.setTextColor(...SLATE_900);
     doc.text(
-      isEn
-        ? 'UltrAI Med - Shift & Ultrasound Triage Summary'
-        : 'UltrAI Med - Resumo de Plantão e Triagem USG',
+      tr(
+        lang,
+        'UltrAI Med - Resumo de Plantão e Triagem USG',
+        'UltrAI Med - Shift & Ultrasound Triage Summary',
+        'UltrAI Med - Resumen de Guardia y Triaje USG'
+      ),
       marginX,
       cursorY
     );
@@ -656,9 +669,9 @@ export class PdfReportService {
     doc.setTextColor(...SLATE_500);
     doc.text(
       sanitizeForPdf(
-        `${isEn ? 'Generated on' : 'Gerado em'} ${new Date().toLocaleDateString(
+        `${tr(lang, 'Gerado em', 'Generated on', 'Generado el')} ${new Date().toLocaleDateString(
           locale
-        )} | ${isEn ? 'Total exams' : 'Total de exames'}: ${exams.length}`
+        )} | ${tr(lang, 'Total de exames', 'Total exams', 'Total de estudios')}: ${exams.length}`
       ),
       marginX,
       cursorY
@@ -680,9 +693,12 @@ export class PdfReportService {
       doc.setTextColor(...SLATE_900);
       doc.text(
         sanitizeForPdf(
-          `${idx + 1}. ${patient.name} (${patient.age} ${
-            isEn ? 'yrs' : 'anos'
-          })`
+          `${idx + 1}. ${patient.name} (${patient.age} ${tr(
+            lang,
+            'anos',
+            'yrs',
+            'años'
+          )})`
         ),
         marginX,
         cursorY
@@ -693,10 +709,10 @@ export class PdfReportService {
       doc.setFontSize(8.8);
       doc.setTextColor(...SLATE_700);
       const summaryLine = rep
-        ? `${isEn ? 'Impression' : 'Impressão'}: ${
+        ? `${tr(lang, 'Impressão', 'Impression', 'Impresión')}: ${
             rep.diagnosticImpression.primaryDiagnosis
           }`
-        : `${isEn ? 'Indication' : 'Indicação'}: ${
+        : `${tr(lang, 'Indicação', 'Indication', 'Indicación')}: ${
             patient.clinicalIndication
           } (Status: ${exam.status})`;
       const wrapped = doc.splitTextToSize(
@@ -716,7 +732,12 @@ export class PdfReportService {
 
     const datePart = new Date().toISOString().slice(0, 10);
     doc.save(
-      `${isEn ? 'UltrAI_Med_Shift_Summary' : 'Resumo_Plantao_UltrAI_Med'}_${datePart}.pdf`
+      `${tr(
+        lang,
+        'Resumo_Plantao_UltrAI_Med',
+        'UltrAI_Med_Shift_Summary',
+        'Resumen_Guardia_UltrAI_Med'
+      )}_${datePart}.pdf`
     );
   }
 
@@ -735,9 +756,12 @@ export class PdfReportService {
     a.href = normalized.jpegDataUrl;
     const safeName = slugifyName(patientName || 'Exam');
     const datePart = new Date().toISOString().slice(0, 10);
-    a.download = `${
-      lang === 'en' ? 'Ultrasound' : 'Ultrassom'
-    }_${safeName}_${datePart}.jpg`;
+    a.download = `${tr(
+      lang,
+      'Ultrassom',
+      'Ultrasound',
+      'Ultrasonido'
+    )}_${safeName}_${datePart}.jpg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

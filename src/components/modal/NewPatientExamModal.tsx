@@ -12,13 +12,38 @@ interface NewPatientExamModalProps {
 
 const DEFAULT_TRANSDUCER: Record<UltrasoundSpecialty, TransducerType> = {
   ABDOMEN: 'CONVEX',
+  CERVICAL: 'LINEAR',
   THYROID: 'LINEAR',
   BREAST: 'LINEAR',
+  AXILLAE: 'LINEAR',
   URINARY_KIDNEYS: 'CONVEX',
   POCUS_FAST: 'SECTOR',
   PELVIC_GYN: 'ENDOCAVITARY',
+  OBSTETRIC_INITIAL: 'ENDOCAVITARY',
+  OBSTETRIC_SECOND_TRIMESTER: 'CONVEX',
+  OBSTETRIC_THIRD_TRIMESTER: 'CONVEX',
   VASCULAR_DOPPLER: 'LINEAR',
+  SOFT_TISSUES: 'LINEAR',
+  MSK_SHOULDER: 'LINEAR',
+  MSK_ARM: 'LINEAR',
+  MSK_ELBOW: 'LINEAR',
+  MSK_FOREARM: 'LINEAR',
+  MSK_WRIST: 'LINEAR',
+  MSK_HAND: 'LINEAR',
+  MSK_HIP: 'CONVEX',
+  MSK_THIGH: 'LINEAR',
+  MSK_KNEE: 'LINEAR',
+  MSK_LEG: 'LINEAR',
+  MSK_ANKLE: 'LINEAR',
+  MSK_FOOT: 'LINEAR',
 };
+
+const getDefaultRoomBed = (lang: 'pt' | 'en' | 'es') =>
+  lang === 'en'
+    ? 'Emergency Dept - Bay 02'
+    : lang === 'es'
+      ? 'Urgencias - Box 02'
+      : 'Pronto-Socorro - Box 02';
 
 export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
   isOpen,
@@ -29,9 +54,7 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
   const [name, setName] = useState('');
   const [age, setAge] = useState<number | ''>(45);
   const [gender, setGender] = useState<'M' | 'F' | 'Outro'>('F');
-  const [roomBed, setRoomBed] = useState(
-    lang === 'en' ? 'Emergency Dept - Bay 02' : 'Pronto-Socorro - Box 02'
-  );
+  const [roomBed, setRoomBed] = useState(() => getDefaultRoomBed(lang));
   const [clinicalIndication, setClinicalIndication] = useState('');
   const [specialty, setSpecialty] = useState<UltrasoundSpecialty>('ABDOMEN');
   const [transducer, setTransducer] = useState<TransducerType>('CONVEX');
@@ -39,8 +62,13 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
 
   useEffect(() => {
     setRoomBed((prev) => {
-      if (prev === 'Pronto-Socorro - Box 02' && lang === 'en') return 'Emergency Dept - Bay 02';
-      if (prev === 'Emergency Dept - Bay 02' && lang === 'pt') return 'Pronto-Socorro - Box 02';
+      if (
+        prev === 'Pronto-Socorro - Box 02' ||
+        prev === 'Emergency Dept - Bay 02' ||
+        prev === 'Urgencias - Box 02'
+      ) {
+        return getDefaultRoomBed(lang);
+      }
       return prev;
     });
   }, [lang]);
@@ -183,13 +211,37 @@ export const NewPatientExamModal: React.FC<NewPatientExamModalProps> = ({
               }}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
             >
-              <option value="ABDOMEN">{t.specialties.ABDOMEN}</option>
-              <option value="THYROID">{t.specialties.THYROID}</option>
-              <option value="BREAST">{t.specialties.BREAST}</option>
-              <option value="URINARY_KIDNEYS">{t.specialties.URINARY_KIDNEYS}</option>
-              <option value="POCUS_FAST">{t.specialties.POCUS_FAST}</option>
-              <option value="PELVIC_GYN">{t.specialties.PELVIC_GYN}</option>
-              <option value="VASCULAR_DOPPLER">{t.specialties.VASCULAR_DOPPLER}</option>
+              <optgroup label={t.specialtyGroups.general}>
+                <option value="ABDOMEN">{t.specialties.ABDOMEN}</option>
+                <option value="CERVICAL">{t.specialties.CERVICAL}</option>
+                <option value="THYROID">{t.specialties.THYROID}</option>
+                <option value="BREAST">{t.specialties.BREAST}</option>
+                <option value="AXILLAE">{t.specialties.AXILLAE}</option>
+                <option value="URINARY_KIDNEYS">{t.specialties.URINARY_KIDNEYS}</option>
+                <option value="PELVIC_GYN">{t.specialties.PELVIC_GYN}</option>
+                <option value="VASCULAR_DOPPLER">{t.specialties.VASCULAR_DOPPLER}</option>
+                <option value="SOFT_TISSUES">{t.specialties.SOFT_TISSUES}</option>
+                <option value="POCUS_FAST">{t.specialties.POCUS_FAST}</option>
+              </optgroup>
+              <optgroup label={t.specialtyGroups.obstetric}>
+                <option value="OBSTETRIC_INITIAL">{t.specialties.OBSTETRIC_INITIAL}</option>
+                <option value="OBSTETRIC_SECOND_TRIMESTER">{t.specialties.OBSTETRIC_SECOND_TRIMESTER}</option>
+                <option value="OBSTETRIC_THIRD_TRIMESTER">{t.specialties.OBSTETRIC_THIRD_TRIMESTER}</option>
+              </optgroup>
+              <optgroup label={t.specialtyGroups.msk}>
+                <option value="MSK_SHOULDER">{t.specialties.MSK_SHOULDER}</option>
+                <option value="MSK_ARM">{t.specialties.MSK_ARM}</option>
+                <option value="MSK_ELBOW">{t.specialties.MSK_ELBOW}</option>
+                <option value="MSK_FOREARM">{t.specialties.MSK_FOREARM}</option>
+                <option value="MSK_WRIST">{t.specialties.MSK_WRIST}</option>
+                <option value="MSK_HAND">{t.specialties.MSK_HAND}</option>
+                <option value="MSK_HIP">{t.specialties.MSK_HIP}</option>
+                <option value="MSK_THIGH">{t.specialties.MSK_THIGH}</option>
+                <option value="MSK_KNEE">{t.specialties.MSK_KNEE}</option>
+                <option value="MSK_LEG">{t.specialties.MSK_LEG}</option>
+                <option value="MSK_ANKLE">{t.specialties.MSK_ANKLE}</option>
+                <option value="MSK_FOOT">{t.specialties.MSK_FOOT}</option>
+              </optgroup>
             </select>
           </div>
 

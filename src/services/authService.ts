@@ -154,7 +154,6 @@ class AuthService {
   }
 
   public login(email: string, password: string, lang: AppLanguage = 'pt'): LoginResult {
-    const isEn = lang === 'en';
     const normalizedEmail = email.trim().toLowerCase();
     const store = this.getStore();
 
@@ -166,9 +165,12 @@ class AuthService {
       return {
         ok: false,
         reason: 'INVALID_CREDENTIALS',
-        message: isEn
-          ? 'Invalid email or password. Please verify your credentials.'
-          : 'E-mail ou senha incorretos. Verifique seus dados de acesso.',
+        message:
+          lang === 'en'
+            ? 'Invalid email or password. Please verify your credentials.'
+            : lang === 'es'
+            ? 'Correo electrónico o contraseña incorrectos. Verifique sus credenciales.'
+            : 'E-mail ou senha incorretos. Verifique seus dados de acesso.',
       };
     }
 
@@ -187,9 +189,12 @@ class AuthService {
           email: account.email,
           trialEndsAt: account.trialEndsAt,
         },
-        message: isEn
-          ? 'Your 3-day free trial has expired. Please activate your subscription to continue accessing UltrAI Med.'
-          : 'Seu período de uso grátis de 3 dias expirou. Ative sua assinatura mensal para continuar acessando o UltrAI Med.',
+        message:
+          lang === 'en'
+            ? 'Your 3-day free trial has expired. Please activate your subscription to continue accessing UltrAI Med.'
+            : lang === 'es'
+            ? 'Su período de prueba gratuito de 3 días ha expirado. Active su suscripción mensual para seguir accediendo a UltrAI Med.'
+            : 'Seu período de uso grátis de 3 dias expirou. Ative sua assinatura mensal para continuar acessando o UltrAI Med.',
       };
     }
 
@@ -210,7 +215,6 @@ class AuthService {
     },
     lang: AppLanguage = 'pt'
   ): RegisterResult {
-    const isEn = lang === 'en';
     const name = params.name.trim();
     const crm = params.crm.trim();
     const email = params.email.trim().toLowerCase();
@@ -219,25 +223,36 @@ class AuthService {
     if (!name || !crm || !email) {
       return {
         ok: false,
-        message: isEn
-          ? 'Please fill in your full name, medical license (CRM), and email.'
-          : 'Preencha seu nome completo, registro profissional (CRM) e e-mail.',
+        message:
+          lang === 'en'
+            ? 'Please fill in your full name, medical license (CRM), and email.'
+            : lang === 'es'
+            ? 'Complete su nombre completo, registro profesional y correo electrónico.'
+            : 'Preencha seu nome completo, registro profissional (CRM) e e-mail.',
       };
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return {
         ok: false,
-        message: isEn ? 'Please enter a valid email address.' : 'Informe um e-mail válido.',
+        message:
+          lang === 'en'
+            ? 'Please enter a valid email address.'
+            : lang === 'es'
+            ? 'Ingrese un correo electrónico válido.'
+            : 'Informe um e-mail válido.',
       };
     }
 
     if (password.length < 6) {
       return {
         ok: false,
-        message: isEn
-          ? 'Password must be at least 6 characters long.'
-          : 'A senha deve ter pelo menos 6 caracteres.',
+        message:
+          lang === 'en'
+            ? 'Password must be at least 6 characters long.'
+            : lang === 'es'
+            ? 'La contraseña debe tener al menos 6 caracteres.'
+            : 'A senha deve ter pelo menos 6 caracteres.',
       };
     }
 
@@ -249,9 +264,12 @@ class AuthService {
     if (alreadyExists) {
       return {
         ok: false,
-        message: isEn
-          ? 'An account with this email already exists. Please sign in instead.'
-          : 'Já existe uma conta cadastrada com este e-mail. Faça login na aba Entrar.',
+        message:
+          lang === 'en'
+            ? 'An account with this email already exists. Please sign in instead.'
+            : lang === 'es'
+            ? 'Ya existe una cuenta registrada con este correo. Inicie sesión en la pestaña Entrar.'
+            : 'Já existe uma conta cadastrada com este e-mail. Faça login na aba Entrar.',
       };
     }
 

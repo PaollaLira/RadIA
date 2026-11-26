@@ -9,7 +9,6 @@ import {
   FileDown,
   Check,
   BookOpen,
-  UserCheck,
   Stethoscope,
   ClipboardList,
   Edit3,
@@ -32,9 +31,14 @@ export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
 }) => {
   const { lang, t } = useLanguage();
   const localizedPatient = localizePatient(patient, lang);
-  const locale = lang === 'en' ? 'en-US' : 'pt-BR';
+  const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
 
-  const defaultLicense = lang === 'en' ? 'MD / License 123456' : 'CRM/UF 123456';
+  const defaultLicense =
+    lang === 'en'
+      ? 'MD / License 123456'
+      : lang === 'es'
+      ? 'Matrícula / Col. 123456'
+      : 'CRM/UF 123456';
 
   const [copied, setCopied] = useState<boolean>(false);
   const [pdfExported, setPdfExported] = useState<boolean>(false);
@@ -47,19 +51,19 @@ export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
 
   useEffect(() => {
     setEditableReport(report);
-    setPhysicianCRM(report.crm || (lang === 'en' ? 'MD / License 123456' : 'CRM/UF 123456'));
+    setPhysicianCRM(report.crm || defaultLicense);
     setPhysicianName(report.radiologistName || t.report.defaultPhysician);
     setIsEditing(false);
-  }, [report]);
+  }, [report, defaultLicense, t.report.defaultPhysician]);
 
   useEffect(() => {
     if (!report.radiologistName) {
       setPhysicianName(t.report.defaultPhysician);
     }
     if (!report.crm) {
-      setPhysicianCRM(lang === 'en' ? 'MD / License 123456' : 'CRM/UF 123456');
+      setPhysicianCRM(defaultLicense);
     }
-  }, [lang, report.radiologistName, report.crm, t.report.defaultPhysician]);
+  }, [lang, report.radiologistName, report.crm, t.report.defaultPhysician, defaultLicense]);
 
   const currentReport = isEditing ? editableReport : report;
 
@@ -71,12 +75,15 @@ export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
         : t.patientCard.other;
 
   const handleCopyFormattedText = () => {
-    const isEn = lang === 'en';
-    const textToCopy = isEn
-      ? `
+    const patientFallback =
+      lang === 'en' ? 'Not specified' : lang === 'es' ? 'No especificado' : 'Não informado';
+
+    const textToCopy =
+      lang === 'en'
+        ? `
 ULTRASOUND MEDICAL REPORT — ULTRAI MED DIAGNOSTIC COPILOT
 ======================================================
-PATIENT: ${localizedPatient.name || (isEn ? 'Not specified' : 'Não informado')}
+PATIENT: ${localizedPatient.name || patientFallback}
 ${localizedPatient.age > 0 ? `AGE: ${localizedPatient.age} yrs | ` : ''}SEX: ${genderLabel}
 DATE: ${new Date(currentReport.createdAt).toLocaleDateString('en-US')}
 ------------------------------------------------------
@@ -98,13 +105,7 @@ ${currentReport.diagnosticImpression.classificationScore ? `- Standardized Score
 - Rationale: ${currentReport.urgencyRationale}
 - Immediate Action: ${currentReport.riskStratification.actionRecommendation}
 
-5. RECOMMENDED SPECIALIST REFERRALS:
-${currentReport.recommendedSpecialists.map((s) => `• ${s.specialty} [${s.timeframe}]: ${s.rationale}`).join('\n')}
-
-6. SUGGESTED COMPLEMENTARY EXAMS:
-${currentReport.complementaryExams.map((e) => `• ${e.examName} (${e.urgency}): ${e.clinicalJustification}`).join('\n')}
-
-7. MEDICAL LITERATURE & GUIDELINES:
+5. MEDICAL LITERATURE & GUIDELINES:
 ${currentReport.medicalLiterature.map((l) => `• ${l.guidelineOrStudy} (${l.organizationOrJournal}, ${l.year}) [${l.evidenceLevel}]: ${l.summaryOfEvidence}`).join('\n')}
 
 ------------------------------------------------------
@@ -112,10 +113,44 @@ SIGNATURE:
 ${physicianName} - ${physicianCRM}
 Report issued with UltrAI Med decision support (International Ultrasound Guidelines).
       `.trim()
-      : `
+        : lang === 'es'
+        ? `
+INFORME MÉDICO DE ULTRASONOGRAFÍA — ULTRAI MED COPILOTO DIAGNÓSTICO
+======================================================
+PACIENTE: ${localizedPatient.name || patientFallback}
+${localizedPatient.age > 0 ? `EDAD: ${localizedPatient.age} años | ` : ''}SEXO: ${genderLabel}
+FECHA: ${new Date(currentReport.createdAt).toLocaleDateString('es-ES')}
+------------------------------------------------------
+1. TÉCNICA Y PROTOCOLO DEL ESTUDIO:
+- Estudio: ${currentReport.technique.protocolName}
+- Transductor: ${currentReport.technique.transducerType}
+- Ventanas Acústicas: ${currentReport.technique.acousticWindows}
+- Preparación: ${currentReport.technique.patientPreparation}
+
+2. HALLAZGOS RADIOLÓGICOS DETALLADOS:
+${currentReport.findings.map((f) => `• ${f.region}: ${f.description}${f.measurements ? ` (${f.measurements})` : ''}`).join('\n')}
+
+3. IMPRESIÓN DIAGNÓSTICA:
+- Diagnóstico Principal: ${currentReport.diagnosticImpression.primaryDiagnosis}
+${currentReport.diagnosticImpression.classificationScore ? `- Clasificación / Escala: ${currentReport.diagnosticImpression.classificationScore}\n` : ''}- Diagnósticos Diferenciales: ${currentReport.diagnosticImpression.differentialDiagnoses.join('; ')}
+- Comparación Previa: ${currentReport.diagnosticImpression.comparativeEvolution || 'N/A'}
+
+4. ESTRATIFICACIÓN DE RIESGO Y GRAVEDAD:
+- Justificación: ${currentReport.urgencyRationale}
+- Conducta Inmediata Sugerida: ${currentReport.riskStratification.actionRecommendation}
+
+5. RESPALDO EN LITERATURA MÉDICA:
+${currentReport.medicalLiterature.map((l) => `• ${l.guidelineOrStudy} (${l.organizationOrJournal}, ${l.year}) [${l.evidenceLevel}]: ${l.summaryOfEvidence}`).join('\n')}
+
+------------------------------------------------------
+FIRMA:
+${physicianName} - ${physicianCRM}
+Informe emitido con apoyo de UltrAI Med (Guías Internacionales de Ultrasonografía).
+      `.trim()
+        : `
 LAUDO DE ULTRASSONOGRAFIA — ULTRAI MED COPILOTO DIAGNÓSTICO
 ======================================================
-PACIENTE: ${localizedPatient.name || 'Não informado'}
+PACIENTE: ${localizedPatient.name || patientFallback}
 ${localizedPatient.age > 0 ? `IDADE: ${localizedPatient.age} anos | ` : ''}SEXO: ${genderLabel}
 DATA: ${new Date(currentReport.createdAt).toLocaleDateString('pt-BR')}
 ------------------------------------------------------
@@ -137,13 +172,7 @@ ${currentReport.diagnosticImpression.classificationScore ? `- Classificação / 
 - Justificativa: ${currentReport.urgencyRationale}
 - Conduta Imediata Sugerida: ${currentReport.riskStratification.actionRecommendation}
 
-5. ESPECIALISTAS RECOMENDADOS PARA ENCAMINHAMENTO:
-${currentReport.recommendedSpecialists.map((s) => `• ${s.specialty} [Prazo: ${s.timeframe}]: ${s.rationale}`).join('\n')}
-
-6. EXAMES COMPLEMENTARES SUGERIDOS:
-${currentReport.complementaryExams.map((e) => `• ${e.examName} (${e.urgency}): ${e.clinicalJustification}`).join('\n')}
-
-7. EMBASAMENTO EM LITERATURA MÉDICA:
+5. EMBASAMENTO EM LITERATURA MÉDICA:
 ${currentReport.medicalLiterature.map((l) => `• ${l.guidelineOrStudy} (${l.organizationOrJournal}, ${l.year}) [${l.evidenceLevel}]: ${l.summaryOfEvidence}`).join('\n')}
 
 ------------------------------------------------------
@@ -279,7 +308,12 @@ Laudo emitido com suporte do UltrAI Med (Diretrizes Internacionais de Ultrassono
                 <span>
                   {t.report.patient}:{' '}
                   <strong className="text-slate-800 dark:text-slate-200">
-                    {localizedPatient.name || (lang === 'en' ? 'Not specified' : 'Não informado')}
+                    {localizedPatient.name ||
+                      (lang === 'en'
+                        ? 'Not specified'
+                        : lang === 'es'
+                        ? 'No especificado'
+                        : 'Não informado')}
                   </strong>
                 </span>
                 <span aria-hidden="true">·</span>
@@ -473,62 +507,11 @@ Laudo emitido com suporte do UltrAI Med (Diretrizes Internacionais de Ultrassono
           </div>
         </div>
 
-        {/* 5. RECOMMENDED SPECIALISTS */}
-        <div>
-          <h2 className="text-xs uppercase tracking-wider font-bold text-teal-800 dark:text-cyan-400 mb-1.5 flex items-center gap-1.5">
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>{t.report.sec5}</span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {currentReport.recommendedSpecialists.map((spec, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800 text-xs"
-              >
-                <div className="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100 mb-1">
-                  <span>{spec.specialty}</span>
-                  <span className="text-[10px] uppercase tracking-wide font-semibold text-teal-800 dark:text-cyan-300">
-                    {spec.timeframe}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
-                  {spec.rationale}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 6. COMPLEMENTARY EXAMS */}
-        <div>
-          <h2 className="text-xs uppercase tracking-wider font-bold text-teal-800 dark:text-cyan-400 mb-1.5">
-            {t.report.sec6}
-          </h2>
-          <div className="space-y-2">
-            {currentReport.complementaryExams.map((exam, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800 text-xs"
-              >
-                <div className="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100 mb-0.5">
-                  <span>{exam.examName}</span>
-                  <span className="text-[10px] uppercase font-mono text-slate-500 dark:text-slate-400">
-                    {exam.urgency}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
-                  <strong>{t.report.clinicalJustification}:</strong> {exam.clinicalJustification}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 7. MEDICAL LITERATURE */}
+        {/* 5. MEDICAL LITERATURE */}
         <div>
           <h2 className="text-xs uppercase tracking-wider font-bold text-teal-800 dark:text-cyan-400 mb-1.5 flex items-center gap-1.5">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>{t.report.sec7}</span>
+            <span>{t.report.sec5}</span>
           </h2>
           <div className="space-y-2">
             {currentReport.medicalLiterature.map((lit, idx) => (

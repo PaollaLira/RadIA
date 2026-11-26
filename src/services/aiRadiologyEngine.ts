@@ -6,7 +6,7 @@ import { AppLanguage } from '../i18n/translations';
 export class AiRadiologyEngine {
   /**
    * Processa a análise do exame de ultrassonografia via Gemini no backend (/api/analyze-exam)
-   * e retorna o laudo estruturado completo no mesmo padrão de 7 seções para imagem ou texto.
+   * e retorna o laudo estruturado completo no padrão de 5 seções para imagem ou texto.
    */
   public static async analyzeExam(
     exam: UltrasoundExam,
@@ -18,6 +18,7 @@ export class AiRadiologyEngine {
       language?: AppLanguage;
     }
   ): Promise<StandardizedRadiologyReport> {
+    const lang = options.language || 'pt';
     const response = await fetch('/api/analyze-exam', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -27,7 +28,7 @@ export class AiRadiologyEngine {
         inputMode: options.inputMode,
         imageDataUrl: options.imageDataUrl,
         customFindingText: options.customFindingText,
-        language: options.language || 'pt',
+        language: lang,
       }),
     });
 
@@ -43,11 +44,15 @@ export class AiRadiologyEngine {
       throw new Error(
         data.error ||
           (response.status === 503
-            ? options.language === 'en'
+            ? lang === 'en'
               ? 'The AI service is temporarily experiencing high demand. Please wait a few seconds and try again.'
+              : lang === 'es'
+              ? 'El servicio de IA tiene alta demanda temporalmente. Espere unos segundos e inténtelo de nuevo.'
               : 'O serviço de IA está temporariamente com alta demanda. Aguarde alguns segundos e tente novamente.'
-            : options.language === 'en'
+            : lang === 'en'
               ? 'Failed to process clinical ultrasound analysis with AI.'
+              : lang === 'es'
+              ? 'Error al procesar el análisis ecográfico con la IA.'
               : 'Erro ao processar análise ecográfica com a IA.')
       );
     }
@@ -68,8 +73,6 @@ export class AiRadiologyEngine {
       findings: r.findings || [],
       diagnosticImpression: r.diagnosticImpression,
       riskStratification: r.riskStratification,
-      recommendedSpecialists: r.recommendedSpecialists || [],
-      complementaryExams: r.complementaryExams || [],
       medicalLiterature: r.medicalLiterature || [],
       signedByRadiologist: false,
     };

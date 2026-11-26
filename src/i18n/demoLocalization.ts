@@ -89,6 +89,93 @@ const EN_PATIENTS: Record<string, Partial<Patient>> = {
   },
 };
 
+const ES_PATIENTS: Record<string, Partial<Patient>> = {
+  'pat-001': {
+    clinicalIndication:
+      'Dolor súbito intenso en hipocondrio derecho irradiado al dorso desde hace 12 h, fiebre (38,4 °C), vómitos y leucocitosis (16.200/mm³).',
+    roomBed: 'Urgencias Adultos - Box 04',
+    comorbidities: ['Diabetes Mellitus tipo 2', 'Hipertensión Arterial Sistémica', 'Dislipidemia'],
+    allergies: ['Dipirona (broncoespasmo)'],
+    currentMedications: ['Metformina 850 mg c/12 h', 'Losartán 50 mg/día'],
+    priorExams: [
+      {
+        id: 'prior-001-a',
+        date: '2024-08-15',
+        modality: 'USG',
+        region: 'Abdomen Superior',
+        summary:
+          'Esteatosis hepática moderada (grado II). Vesícula biliar con microlitiasis móvil, paredes finas (2,1 mm), sin signos de colecistitis.',
+        keyFindings: ['Esteatosis hepática grado II', 'Microlitiasis biliar sin colecistitis'],
+      },
+    ],
+  },
+  'pat-002': {
+    clinicalIndication:
+      'Nódulo palpable indoloro en el tercio inferior del lóbulo tiroideo derecho, detectado en consulta de rutina.',
+    roomBed: 'Consulta Externa de Especialidades - Sala 02',
+    comorbidities: ['Hipotiroidismo subclínico'],
+    allergies: ['Sin alergias medicamentosas conocidas'],
+    currentMedications: ['Levotiroxina 50 mcg/día en ayunas'],
+    priorExams: [
+      {
+        id: 'prior-002-a',
+        date: '2024-05-10',
+        modality: 'USG',
+        region: 'Tiroides y Cervical',
+        summary:
+          'Glándula tiroides de dimensiones conservadas. Dos pequeños quistes coloides en lóbulo izquierdo (< 3 mm). Lóbulo derecho homogéneo sin nódulos focales.',
+        keyFindings: ['Quistes coloides en lóbulo izquierdo', 'Lóbulo derecho normal sin lesiones focales'],
+      },
+    ],
+  },
+  'pat-003': {
+    clinicalIndication:
+      'Politraumatismo por colisión de motocicleta, dolor abdominal difuso, taquicardia (124 lpm), diaforesis fría, PA 85/50 mmHg.',
+    roomBed: 'Sala de Choque / Reanimación - Cama 01',
+    comorbidities: ['Previamente sano'],
+    allergies: ['Desconocidas (paciente obnubilado)'],
+    currentMedications: ['Ninguna'],
+  },
+  'pat-004': {
+    clinicalIndication:
+      'Tamizaje complementario por mamas densas (patrón heterogéneamente denso, Tipo C). Asintomática.',
+    roomBed: 'Centro de Diagnóstico por Imagen',
+    comorbidities: ['Osteopenia'],
+    allergies: ['Contraste yodado (reacción urticariforme previa)'],
+    currentMedications: ['Carbonato de Calcio + Vitamina D'],
+    priorExams: [
+      {
+        id: 'prior-004-a',
+        date: '2025-10-12',
+        modality: 'MAMOGRAFIA',
+        region: 'Mamas Bilateral',
+        summary:
+          'Mamas difusamente densas. Sin microcalcificaciones pleomórficas sospechosas ni distorsión arquitectural. Se sugiere ultrasonido complementario.',
+        keyFindings: ['Patrón mamario denso (Tipo C)', 'BI-RADS 0 por densidad'],
+      },
+    ],
+  },
+  'pat-005': {
+    clinicalIndication:
+      'Cólico nefrítico izquierdo súbito de gran intensidad asociado a hematuria macroscópica y náuseas incoercibles.',
+    roomBed: 'Urgencias - Box 08',
+    comorbidities: ['Gota', 'Dislipidemia', 'Hiperplasia Prostática Benigna (HPB)'],
+    allergies: ['Sulfamidas'],
+    currentMedications: ['Alopurinol 100 mg/día', 'Tamsulosina 0,4 mg/día'],
+    priorExams: [
+      {
+        id: 'prior-005-a',
+        date: '2023-11-02',
+        modality: 'USG',
+        region: 'Aparato Urinario',
+        summary:
+          'Riñones tópicos con contornos conservados. Microlitiasis no obstructiva en polo inferior derecho (3 mm) e izquierdo (4 mm). Sin hidronefrosis.',
+        keyFindings: ['Microlitiasis renal bilateral no obstructiva'],
+      },
+    ],
+  },
+};
+
 const EN_EXAM_FINDINGS: Record<string, string> = {
   'exam-001':
     'Distended gallbladder with a 19 mm calculus impacted at the infundibulum showing posterior acoustic shadowing. Thickened wall measuring 5.4 mm with hypoechoic mural halo and pericholecystic fluid. Positive sonographic Murphy sign.',
@@ -102,9 +189,22 @@ const EN_EXAM_FINDINGS: Record<string, string> = {
     'Moderate-to-severe left pelvicalyceal ectasia. Hyperechoic 8 mm calculus in the distal left ureter / ureterovesical junction producing posterior acoustic shadowing and twinkling artifact.',
 };
 
+const ES_EXAM_FINDINGS: Record<string, string> = {
+  'exam-001':
+    'Vesícula biliar distendida con cálculo de 19 mm impactado en el infundíbulo con sombra acústica posterior. Pared engrosada de 5,4 mm con halo mural hipoecogénico y líquido pericolecístico. Signo de Murphy ecográfico positivo.',
+  'exam-002':
+    'Nódulo sólido marcadamente hipoecogénico en el tercio medio del lóbulo tiroideo derecho de 15 x 11 x 13 mm. Orientación más alta que ancha, márgenes microlobulados y focos ecogénicos puntiformes (microcalcificaciones).',
+  'exam-003':
+    'E-FAST Trauma: Lámina de líquido libre anecoico en el receso hepatorrenal / espacio de Morrison (16 mm de espesor) y en el receso esplenorrenal. Ventana pericárdica libre y deslizamiento pleural conservado bilateralmente.',
+  'exam-004':
+    'Quiste anecoico ovalado y circunscrito, de paredes finas y nítido refuerzo acústico posterior en el cuadrante superior externo de la mama izquierda (radio 2 h), de 8 x 5 mm. Sin vascularización al Doppler.',
+  'exam-005':
+    'Ectasia pielocalicial izquierda moderada a grave. Cálculo hiperecogénico de 8 mm en el uréter distal izquierdo / unión ureterovesical que produce sombra acústica posterior y artefacto de centelleo.',
+};
+
 export function localizePatient(patient: Patient, lang: AppLanguage): Patient {
   if (lang === 'pt') return patient;
-  const patch = EN_PATIENTS[patient.id];
+  const patch = lang === 'es' ? ES_PATIENTS[patient.id] : EN_PATIENTS[patient.id];
   if (!patch) return patient;
   return {
     ...patient,
@@ -114,10 +214,11 @@ export function localizePatient(patient: Patient, lang: AppLanguage): Patient {
 
 export function localizeExam(exam: UltrasoundExam, lang: AppLanguage): UltrasoundExam {
   if (lang === 'pt') return exam;
-  const enFinding = EN_EXAM_FINDINGS[exam.id];
-  if (!enFinding) return exam;
+  const localizedFinding =
+    lang === 'es' ? ES_EXAM_FINDINGS[exam.id] : EN_EXAM_FINDINGS[exam.id];
+  if (!localizedFinding) return exam;
   return {
     ...exam,
-    manualFindingText: enFinding,
+    manualFindingText: localizedFinding,
   };
 }

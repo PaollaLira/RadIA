@@ -14,8 +14,10 @@ import {
   ArrowUp,
   CheckCircle2,
   SearchX,
+  Scale,
 } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { ContextualCardCalculator } from './ContextualCardCalculator';
 import {
   ReferenceGroup,
   FetalTrimester,
@@ -29,7 +31,8 @@ import {
 
 export const MeasurementsReferenceView: React.FC = () => {
   const { lang } = useLanguage();
-  const isEn = lang === 'en';
+  const tr = (pt: string, en: string, es: string) =>
+    lang === 'en' ? en : lang === 'es' ? es : pt;
 
   const [selectedGroup, setSelectedGroup] = useState<ReferenceGroup>('fetal');
   const [selectedTrimester, setSelectedTrimester] = useState<FetalTrimester | 'all'>('first');
@@ -39,6 +42,7 @@ export const MeasurementsReferenceView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedTableId, setExpandedTableId] = useState<string | null>(null);
   const [activeCheckerId, setActiveCheckerId] = useState<string | null>(null);
+  const [activeCalculatorId, setActiveCalculatorId] = useState<string | null>(null);
   const [testValue, setTestValue] = useState<string>('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -74,7 +78,11 @@ export const MeasurementsReferenceView: React.FC = () => {
             inputMode="decimal"
             value={testValue}
             onChange={(e) => setTestValue(e.target.value)}
-            placeholder={isEn ? `Enter measured value (${unit || ''})` : `Digite o valor medido (${unit || ''})`}
+            placeholder={tr(
+              `Digite o valor medido (${unit || ''})`,
+              `Enter measured value (${unit || ''})`,
+              `Ingrese el valor medido (${unit || ''})`
+            )}
             className="flex-1 text-xs sm:text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           />
           {testValue && (
@@ -82,7 +90,7 @@ export const MeasurementsReferenceView: React.FC = () => {
               type="button"
               onClick={() => setTestValue('')}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-              aria-label={isEn ? 'Clear value' : 'Limpar valor'}
+              aria-label={tr('Limpar valor', 'Clear value', 'Limpiar valor')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -93,9 +101,11 @@ export const MeasurementsReferenceView: React.FC = () => {
           <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <ArrowDown className="w-3.5 h-3.5" />
             <span>
-              {isEn
-                ? `Below reference (< ${minVal} ${unit || ''})`
-                : `Abaixo da referência (< ${minVal} ${unit || ''})`}
+              {tr(
+                `Abaixo da referência (< ${minVal} ${unit || ''})`,
+                `Below reference (< ${minVal} ${unit || ''})`,
+                `Por debajo de referencia (< ${minVal} ${unit || ''})`
+              )}
             </span>
           </div>
         )}
@@ -103,9 +113,11 @@ export const MeasurementsReferenceView: React.FC = () => {
           <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400">
             <ArrowUp className="w-3.5 h-3.5" />
             <span>
-              {isEn
-                ? `Above reference (> ${maxVal} ${unit || ''})`
-                : `Acima da referência (> ${maxVal} ${unit || ''})`}
+              {tr(
+                `Acima da referência (> ${maxVal} ${unit || ''})`,
+                `Above reference (> ${maxVal} ${unit || ''})`,
+                `Por encima de referencia (> ${maxVal} ${unit || ''})`
+              )}
             </span>
           </div>
         )}
@@ -113,9 +125,11 @@ export const MeasurementsReferenceView: React.FC = () => {
           <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>
-              {isEn
-                ? `Within normal range (${minVal}–${maxVal} ${unit || ''})`
-                : `Dentro da faixa normal (${minVal}–${maxVal} ${unit || ''})`}
+              {tr(
+                `Dentro da faixa normal (${minVal}–${maxVal} ${unit || ''})`,
+                `Within normal range (${minVal}–${maxVal} ${unit || ''})`,
+                `Dentro del rango normal (${minVal}–${maxVal} ${unit || ''})`
+              )}
             </span>
           </div>
         )}
@@ -125,11 +139,22 @@ export const MeasurementsReferenceView: React.FC = () => {
 
   const renderMeasurementCard = (item: ReferenceMeasurement) => {
     const isCheckerOpen = activeCheckerId === item.id;
+    const isCalcOpen = activeCalculatorId === item.id;
     const hasNumericRange = item.minVal !== undefined || item.maxVal !== undefined;
+    const hasCalculator = Boolean(item.calculatorType);
     const title = item.structure[lang];
     const range = item.normalRange[lang];
     const category = item.category[lang];
     const note = item.clinicalNote[lang];
+
+    const calcButtonLabel =
+      item.calculatorType === 'fetal_weight'
+        ? isCalcOpen
+          ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
+          : tr('Calcular peso fetal (Hadlock)', 'Calculate fetal weight (Hadlock)', 'Calcular peso fetal (Hadlock)')
+        : isCalcOpen
+          ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
+          : tr('Calcular volume / peso', 'Calculate volume / weight', 'Calcular volumen / peso');
 
     return (
       <div
@@ -150,17 +175,17 @@ export const MeasurementsReferenceView: React.FC = () => {
             type="button"
             onClick={() => handleCopy(item.id, title, range, item.unit)}
             className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-1 shrink-0 transition-colors"
-            title={isEn ? 'Copy reference' : 'Copiar referência'}
+            title={tr('Copiar referência', 'Copy reference', 'Copiar referencia')}
           >
             {copiedId === item.id ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-500" />
-                <span>{isEn ? 'Copied' : 'Copiado'}</span>
+                <span>{tr('Copiado', 'Copied', 'Copiado')}</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                <span>{isEn ? 'Copy' : 'Copiar'}</span>
+                <span>{tr('Copiar', 'Copy', 'Copiar')}</span>
               </>
             )}
           </button>
@@ -177,33 +202,72 @@ export const MeasurementsReferenceView: React.FC = () => {
           {note}
         </p>
 
-        {hasNumericRange && (
+        {(hasNumericRange || hasCalculator) && (
           <div>
-            <button
-              type="button"
-              onClick={() => {
-                if (isCheckerOpen) {
-                  setActiveCheckerId(null);
-                } else {
-                  setActiveCheckerId(item.id);
-                  setTestValue('');
-                }
-              }}
-              className="text-xs font-semibold text-teal-700 dark:text-cyan-400 hover:underline flex items-center gap-1.5"
-            >
-              <Calculator className="w-3.5 h-3.5" />
-              <span>
-                {isCheckerOpen
-                  ? isEn
-                    ? 'Hide comparator'
-                    : 'Ocultar comparador'
-                  : isEn
-                    ? 'Compare measured value'
-                    : 'Comparar valor medido'}
-              </span>
-            </button>
+            <div className="flex flex-wrap items-center gap-4">
+              {hasNumericRange && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isCheckerOpen) {
+                      setActiveCheckerId(null);
+                    } else {
+                      setActiveCheckerId(item.id);
+                      setTestValue('');
+                    }
+                  }}
+                  className="text-xs font-semibold text-teal-700 dark:text-cyan-400 hover:underline flex items-center gap-1.5"
+                >
+                  <Calculator className="w-3.5 h-3.5" />
+                  <span>
+                    {isCheckerOpen
+                      ? tr('Ocultar comparador', 'Hide comparator', 'Ocultar comparador')
+                      : tr('Comparar valor medido', 'Compare measured value', 'Comparar valor medido')}
+                  </span>
+                </button>
+              )}
+
+              {hasCalculator && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveCalculatorId(isCalcOpen ? null : item.id)
+                  }
+                  className="text-xs font-semibold text-cyan-700 dark:text-cyan-300 hover:underline flex items-center gap-1.5"
+                >
+                  <Scale className="w-3.5 h-3.5" />
+                  <span>{calcButtonLabel}</span>
+                </button>
+              )}
+            </div>
 
             {isCheckerOpen && renderQuickChecker(item.minVal, item.maxVal, item.unit)}
+
+            {isCalcOpen && item.calculatorType && (
+              <ContextualCardCalculator
+                calculatorType={item.calculatorType}
+                organTitle={title}
+                lang={lang}
+                volMin={
+                  item.calculatorType === 'fetal_weight'
+                    ? item.minVal
+                    : item.volumeMin
+                }
+                volMax={
+                  item.calculatorType === 'fetal_weight'
+                    ? item.maxVal
+                    : item.volumeMax
+                }
+                volUnit={
+                  item.calculatorType === 'bladder' || item.calculatorType === 'thyroid'
+                    ? 'mL'
+                    : item.calculatorType === 'fetal_weight'
+                      ? 'g'
+                      : 'cm³'
+                }
+                density={item.density}
+              />
+            )}
           </div>
         )}
       </div>
@@ -264,14 +328,18 @@ export const MeasurementsReferenceView: React.FC = () => {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-              {isEn
-                ? 'Ultrasound Reference Measurements'
-                : 'Consulta Rápida de Medidas Ultrassonográficas'}
+              {tr(
+                'Consulta Rápida de Medidas Ultrassonográficas',
+                'Ultrasound Reference Measurements',
+                'Consulta Rápida de Medidas Ecográficas'
+              )}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {isEn
-                ? 'Look up normal biometric values by gestational trimester, pediatric age, or adult organ without creating a report.'
-                : 'Consulte valores de referência por trimestre fetal, faixa etária pediátrica ou órgão adulto sem precisar emitir laudo.'}
+              {tr(
+                'Consulte valores de referência por trimestre fetal, faixa etária pediátrica ou órgão adulto sem precisar emitir laudo.',
+                'Look up normal biometric values by gestational trimester, pediatric age, or adult organ without creating a report.',
+                'Consulte valores de referencia por trimestre fetal, grupo etario pediátrico u órgano adulto sin necesidad de emitir un informe.'
+              )}
             </p>
           </div>
         </div>
@@ -285,11 +353,11 @@ export const MeasurementsReferenceView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              isEn
-                ? 'Search organ or measurement (e.g. kidney, CBD, CRL, NT, spleen)...'
-                : 'Buscar órgão ou medida (ex.: rim, colédoco, CCN, TN, baço, aorta)...'
-            }
+            placeholder={tr(
+              'Buscar órgão ou medida (ex.: rim, colédoco, CCN, TN, baço, aorta)...',
+              'Search organ or measurement (e.g. kidney, CBD, CRL, NT, spleen)...',
+              'Buscar órgano o medida (ej.: riñón, colédoco, LCC, TN, bazo, aorta)...'
+            )}
             className="w-full text-xs sm:text-sm pl-9 pr-9 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           />
           {searchQuery && (
@@ -297,7 +365,7 @@ export const MeasurementsReferenceView: React.FC = () => {
               type="button"
               onClick={() => setSearchQuery('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-              aria-label={isEn ? 'Clear search' : 'Limpar busca'}
+              aria-label={tr('Limpar busca', 'Clear search', 'Limpiar búsqueda')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -319,7 +387,7 @@ export const MeasurementsReferenceView: React.FC = () => {
             }`}
           >
             <HeartPulse className="w-4 h-4" />
-            <span>{isEn ? 'Fetal' : 'Fetal'}</span>
+            <span>Fetal</span>
           </button>
 
           <button
@@ -335,7 +403,7 @@ export const MeasurementsReferenceView: React.FC = () => {
             }`}
           >
             <Baby className="w-4 h-4" />
-            <span>{isEn ? 'Pediatric' : 'Pediatria'}</span>
+            <span>{tr('Pediatria', 'Pediatric', 'Pediatría')}</span>
           </button>
 
           <button
@@ -351,7 +419,7 @@ export const MeasurementsReferenceView: React.FC = () => {
             }`}
           >
             <User className="w-4 h-4" />
-            <span>{isEn ? 'Adult' : 'Adulto'}</span>
+            <span>{tr('Adulto', 'Adult', 'Adulto')}</span>
           </button>
         </div>
       </div>
@@ -362,10 +430,10 @@ export const MeasurementsReferenceView: React.FC = () => {
           <div className="flex flex-wrap gap-2">
             {(
               [
-                { id: 'first', pt: '1º Trimestre', en: '1st Trimester' },
-                { id: 'second', pt: '2º Trimestre', en: '2nd Trimester' },
-                { id: 'third', pt: '3º Trimestre', en: '3rd Trimester' },
-                { id: 'all', pt: 'Todos os Trimestres', en: 'All Trimesters' },
+                { id: 'first', pt: '1º Trimestre', en: '1st Trimester', es: '1.er Trimestre' },
+                { id: 'second', pt: '2º Trimestre', en: '2nd Trimester', es: '2.º Trimestre' },
+                { id: 'third', pt: '3º Trimestre', en: '3rd Trimester', es: '3.er Trimestre' },
+                { id: 'all', pt: 'Todos os Trimestres', en: 'All Trimesters', es: 'Todos los Trimestres' },
               ] as const
             ).map((tab) => (
               <button
@@ -378,7 +446,7 @@ export const MeasurementsReferenceView: React.FC = () => {
                     : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
-                {isEn ? tab.en : tab.pt}
+                {tab[lang]}
               </button>
             ))}
           </div>
@@ -386,7 +454,13 @@ export const MeasurementsReferenceView: React.FC = () => {
           {filteredFetal.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2">
               <SearchX className="w-7 h-7 mx-auto text-slate-400" />
-              <p>{isEn ? 'No measurements matched this filter.' : 'Nenhuma medida encontrada para este filtro.'}</p>
+              <p>
+                {tr(
+                  'Nenhuma medida encontrada para este filtro.',
+                  'No measurements matched this filter.',
+                  'No se encontraron medidas para este filtro.'
+                )}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -402,7 +476,7 @@ export const MeasurementsReferenceView: React.FC = () => {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
             <div>
               <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                {isEn ? 'Pediatric Age Band' : 'Faixa Etária Pediátrica'}
+                {tr('Faixa Etária Pediátrica', 'Pediatric Age Band', 'Grupo Etario Pediátrico')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {PEDIATRIC_AGE_BANDS.map((band) => (
@@ -424,7 +498,7 @@ export const MeasurementsReferenceView: React.FC = () => {
 
             <div>
               <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                {isEn ? 'Organ / System' : 'Órgão / Sistema'}
+                {tr('Órgão / Sistema', 'Organ / System', 'Órgano / Sistema')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -436,7 +510,7 @@ export const MeasurementsReferenceView: React.FC = () => {
                       : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                   }`}
                 >
-                  {isEn ? 'All Organs' : 'Todos os Órgãos'}
+                  {tr('Todos os Órgãos', 'All Organs', 'Todos los Órganos')}
                 </button>
                 {PEDIATRIC_ORGAN_TABLES.map((t) => (
                   <button
@@ -459,7 +533,13 @@ export const MeasurementsReferenceView: React.FC = () => {
           {filteredPediatricTables.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2">
               <SearchX className="w-7 h-7 mx-auto text-slate-400" />
-              <p>{isEn ? 'No measurements matched this filter.' : 'Nenhuma medida encontrada para este filtro.'}</p>
+              <p>
+                {tr(
+                  'Nenhuma medida encontrada para este filtro.',
+                  'No measurements matched this filter.',
+                  'No se encontraron medidas para este filtro.'
+                )}
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -502,12 +582,12 @@ export const MeasurementsReferenceView: React.FC = () => {
                         {copiedId === checkerKey ? (
                           <>
                             <Check className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>{isEn ? 'Copied' : 'Copiado'}</span>
+                            <span>{tr('Copiado', 'Copied', 'Copiado')}</span>
                           </>
                         ) : (
                           <>
                             <Copy className="w-3.5 h-3.5" />
-                            <span>{isEn ? 'Copy' : 'Copiar'}</span>
+                            <span>{tr('Copiar', 'Copy', 'Copiar')}</span>
                           </>
                         )}
                       </button>
@@ -541,12 +621,16 @@ export const MeasurementsReferenceView: React.FC = () => {
                         <Table2 className="w-3.5 h-3.5" />
                         <span>
                           {isTableExpanded
-                            ? isEn
-                              ? 'Hide full age table'
-                              : 'Ocultar tabela completa por idade'
-                            : isEn
-                              ? 'View full table by age'
-                              : 'Ver tabela completa por idade'}
+                            ? tr(
+                                'Ocultar tabela completa por idade',
+                                'Hide full age table',
+                                'Ocultar tabla completa por edad'
+                              )
+                            : tr(
+                                'Ver tabela completa por idade',
+                                'View full table by age',
+                                'Ver tabla completa por edad'
+                              )}
                         </span>
                       </button>
 
@@ -566,12 +650,27 @@ export const MeasurementsReferenceView: React.FC = () => {
                           <Calculator className="w-3.5 h-3.5" />
                           <span>
                             {isCheckerOpen
-                              ? isEn
-                                ? 'Hide comparator'
-                                : 'Ocultar comparador'
-                              : isEn
-                                ? 'Compare measured value'
-                                : 'Comparar valor medido'}
+                              ? tr('Ocultar comparador', 'Hide comparator', 'Ocultar comparador')
+                              : tr('Comparar valor medido', 'Compare measured value', 'Comparar valor medido')}
+                          </span>
+                        </button>
+                      )}
+
+                      {table.calculatorType && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveCalculatorId(
+                              activeCalculatorId === checkerKey ? null : checkerKey
+                            )
+                          }
+                          className="text-xs font-semibold text-cyan-700 dark:text-cyan-300 hover:underline flex items-center gap-1.5"
+                        >
+                          <Scale className="w-3.5 h-3.5" />
+                          <span>
+                            {activeCalculatorId === checkerKey
+                              ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
+                              : tr('Calcular volume / peso', 'Calculate volume / weight', 'Calcular volumen / peso')}
                           </span>
                         </button>
                       )}
@@ -580,16 +679,33 @@ export const MeasurementsReferenceView: React.FC = () => {
                     {isCheckerOpen &&
                       renderQuickChecker(currentRow.minVal, currentRow.maxVal, table.unit)}
 
+                    {activeCalculatorId === checkerKey && table.calculatorType && (
+                      <ContextualCardCalculator
+                        calculatorType={table.calculatorType}
+                        organTitle={`${table.organ[lang]} (${activeAgeBandObj?.label[lang]})`}
+                        contextLabel={activeAgeBandObj?.label[lang]}
+                        lang={lang}
+                        volMin={currentRow.volMin}
+                        volMax={currentRow.volMax}
+                        volUnit={table.volUnit || 'cm³'}
+                        density={table.density}
+                      />
+                    )}
+
                     {isTableExpanded && (
                       <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 mt-2">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-cyan-300">
                             <tr>
                               <th className="px-3 py-2 font-bold">
-                                {isEn ? 'Age Band' : 'Faixa Etária'}
+                                {tr('Faixa Etária', 'Age Band', 'Grupo Etario')}
                               </th>
                               <th className="px-3 py-2 font-bold">
-                                {isEn ? `Reference (${table.unit})` : `Referência (${table.unit})`}
+                                {tr(
+                                  `Referência (${table.unit})`,
+                                  `Reference (${table.unit})`,
+                                  `Referencia (${table.unit})`
+                                )}
                               </th>
                             </tr>
                           </thead>
@@ -642,7 +758,7 @@ export const MeasurementsReferenceView: React.FC = () => {
                   : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
-              {isEn ? 'All Organs' : 'Todos os Órgãos'}
+              {tr('Todos os Órgãos', 'All Organs', 'Todos los Órganos')}
             </button>
             {adultCategories.map((cat) => (
               <button
@@ -663,7 +779,13 @@ export const MeasurementsReferenceView: React.FC = () => {
           {filteredAdult.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2">
               <SearchX className="w-7 h-7 mx-auto text-slate-400" />
-              <p>{isEn ? 'No measurements matched this filter.' : 'Nenhuma medida encontrada para este filtro.'}</p>
+              <p>
+                {tr(
+                  'Nenhuma medida encontrada para este filtro.',
+                  'No measurements matched this filter.',
+                  'No se encontraron medidas para este filtro.'
+                )}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

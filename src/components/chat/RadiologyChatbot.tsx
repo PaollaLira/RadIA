@@ -70,7 +70,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
   onClearHistory,
 }) => {
   const { lang, t } = useLanguage();
-  const locale = lang === 'en' ? 'en-US' : 'pt-BR';
+  const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
   const localizedPatient = patient ? localizePatient(patient, lang) : undefined;
   const localizedExam = exam ? localizeExam(exam, lang) : undefined;
 
@@ -185,7 +185,9 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
       const fallbackErr =
         lang === 'en'
           ? 'Failed to get a response from UltrAI Med assistant.'
-          : 'Erro ao obter resposta do assistente UltrAI Med.';
+          : lang === 'es'
+            ? 'Error al obtener respuesta del asistente UltrAI Med.'
+            : 'Erro ao obter resposta do assistente UltrAI Med.';
       const message = err instanceof Error ? err.message : fallbackErr;
       setErrorMsg(message);
     } finally {

@@ -20,14 +20,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   const [lang, setLangState] = useState<AppLanguage>(() => {
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved === 'en' || saved === 'pt') return saved;
+      if (saved === 'en' || saved === 'pt' || saved === 'es') return saved;
     }
     return 'pt';
   });
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+      document.documentElement.lang =
+        lang === 'pt' ? 'pt-BR' : lang === 'es' ? 'es' : 'en';
     }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(LANG_STORAGE_KEY, lang);
@@ -35,7 +36,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [lang]);
 
   const setLang = (next: AppLanguage) => setLangState(next);
-  const toggleLang = () => setLangState((prev) => (prev === 'pt' ? 'en' : 'pt'));
+  const toggleLang = () =>
+    setLangState((prev) =>
+      prev === 'pt' ? 'en' : prev === 'en' ? 'es' : 'pt'
+    );
 
   return (
     <LanguageContext.Provider

@@ -25,14 +25,11 @@ export const WorklistQueue: React.FC<WorklistQueueProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [urgencyFilter, setUrgencyFilter] = useState<'ALL' | 'CRITICAL_ONLY' | 'ELECTIVE'>('ALL');
 
-  const specialtyNames: Record<UltrasoundSpecialty, string> = {
-    ABDOMEN: t.specialties.ABDOMEN_SHORT,
-    THYROID: t.specialties.THYROID,
-    BREAST: t.specialties.BREAST_SHORT,
-    URINARY_KIDNEYS: t.specialties.URINARY_KIDNEYS,
-    POCUS_FAST: t.specialties.POCUS_FAST,
-    PELVIC_GYN: t.specialties.PELVIC_GYN,
-    VASCULAR_DOPPLER: t.specialties.VASCULAR_DOPPLER,
+  const getSpecialtyName = (spec?: UltrasoundSpecialty | ''): string => {
+    if (!spec) return lang === 'pt' ? 'Geral' : 'General';
+    if (spec === 'ABDOMEN') return t.specialties.ABDOMEN_SHORT;
+    if (spec === 'BREAST') return t.specialties.BREAST_SHORT;
+    return t.specialties[spec];
   };
 
   const urgencyWeight = {
@@ -181,7 +178,7 @@ export const WorklistQueue: React.FC<WorklistQueueProps> = ({
 
                   <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500 dark:text-slate-400">
                     <span className="font-medium text-teal-800 dark:text-cyan-400">
-                      USG {exam.specialty ? specialtyNames[exam.specialty] : 'Geral'}
+                      USG {getSpecialtyName(exam.specialty)}
                     </span>
                     <span aria-hidden="true">·</span>
                     <span>

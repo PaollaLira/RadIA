@@ -9,7 +9,7 @@ export interface ReportFinding {
 
 export interface RecommendedSpecialist {
   specialty: string;
-  timeframe: string; // Ex: "Imediato / Plantão", "Em até 24h-48h", "Ambulatorial Eletivo"
+  timeframe: string;
   rationale: string;
 }
 
@@ -22,9 +22,9 @@ export interface ComplementaryExam {
 
 export interface MedicalCitation {
   guidelineOrStudy: string;
-  organizationOrJournal: string; // Ex: "ACR (American College of Radiology)", "AIUM", "CBR", "Fleischner Society"
+  organizationOrJournal: string;
   year: number;
-  evidenceLevel: string; // Ex: "Classe I, Nível A", "Consenso de Especialistas"
+  evidenceLevel: string;
   summaryOfEvidence: string;
 }
 
@@ -34,7 +34,7 @@ export interface StandardizedRadiologyReport {
   patientId: string;
   createdAt: string;
   updatedAt: string;
-  
+
   // Metadados de triagem
   urgencyLevel: UrgencyLevel;
   urgencyRationale: string;
@@ -49,31 +49,29 @@ export interface StandardizedRadiologyReport {
     technicalLimitations?: string;
   };
 
-  // 2. ACHADOS RADIOLÓGICOS DETALHADOS
+  // 2. ACHADOS RADIOLÓGICOS DETALHADOS (estruturas normais + alteradas)
   findings: ReportFinding[];
 
   // 3. IMPRESSÃO DIAGNÓSTICA & DIAGNÓSTICO DIFERENCIAL
   diagnosticImpression: {
     primaryDiagnosis: string;
     differentialDiagnoses: string[];
-    classificationScore?: string; // Ex: "ACR TI-RADS 5", "BI-RADS USG 4B", "Colecistite Aguda Grau II"
-    comparativeEvolution?: string; // Comparação com exames anteriores do paciente
+    classificationScore?: string;
+    comparativeEvolution?: string;
   };
 
   // 4. ESTRATIFICAÇÃO DE RISCO & GRAVIDADE
   riskStratification: {
     level: UrgencyLevel;
-    clinicalFlags: string[]; // Ex: "Sinal de Murphy ecográfico", "Líquido livre perivesicular"
+    clinicalFlags: string[];
     actionRecommendation: string;
   };
 
-  // 5. ESPECIALISTAS RECOMENDADOS PARA ENCAMINHAMENTO
-  recommendedSpecialists: RecommendedSpecialist[];
+  // Campos legados opcionais mantidos para compatibilidade com laudos salvos anteriormente
+  recommendedSpecialists?: RecommendedSpecialist[];
+  complementaryExams?: ComplementaryExam[];
 
-  // 6. EXAMES COMPLEMENTARES SUGERIDOS E CONDUTA
-  complementaryExams: ComplementaryExam[];
-
-  // 7. EMBASAMENTO EM LITERATURA MÉDICA & DIRETRIZES ATUALIZADAS
+  // 5. EMBASAMENTO EM LITERATURA MÉDICA & DIRETRIZES ATUALIZADAS
   medicalLiterature: MedicalCitation[];
 
   // Assinatura médica do radiologista

@@ -46,7 +46,8 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
   onCancelUpgrade,
 }) => {
   const { lang, toggleLang, t } = useLanguage();
-  const isEn = lang === 'en';
+  const tr = (pt: string, en: string, es: string) =>
+    lang === 'en' ? en : lang === 'es' ? es : pt;
 
   const [viewMode, setViewMode] = useState<AuthViewMode>(initialMode);
 
@@ -149,11 +150,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
       <header className="border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0 bg-[#054A46]">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0 bg-[#09142B]">
               <img
-                src="/assets/aistudio/Gemini_Generated_Image_i9cl7oi9cl7oi9cl_4fdc7ed6.jfif"
+                src="/assets/aistudio/Gemini_Generated_Image_vykld6vykld6vykl__1__cda2de72.jfif"
                 alt="UltrAI Med"
-                className="w-full h-full object-cover scale-[1.08]"
+                className="w-full h-full object-cover scale-[1.12]"
               />
             </div>
             <div>
@@ -191,34 +192,44 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden">
             {/* Hero Header inside card */}
             <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 text-center space-y-2">
-              <div className="w-14 h-14 mx-auto rounded-2xl overflow-hidden shadow-md bg-[#054A46]">
+              <div className="w-14 h-14 mx-auto rounded-2xl overflow-hidden shadow-md bg-[#09142B]">
                 <img
-                  src="/assets/aistudio/Gemini_Generated_Image_i9cl7oi9cl7oi9cl_4fdc7ed6.jfif"
+                  src="/assets/aistudio/Gemini_Generated_Image_vykld6vykld6vykl__1__cda2de72.jfif"
                   alt="UltrAI Med"
-                  className="w-full h-full object-cover scale-[1.08]"
+                  className="w-full h-full object-cover scale-[1.12]"
                 />
               </div>
               <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                 {viewMode === 'payment'
-                  ? isEn
-                    ? 'Activate UltrAI Med Subscription'
-                    : 'Assinatura UltrAI Med'
+                  ? tr(
+                      'Assinatura UltrAI Med',
+                      'Activate UltrAI Med Subscription',
+                      'Suscripción UltrAI Med'
+                    )
                   : viewMode === 'register'
-                    ? isEn
-                      ? 'Create Medical Account'
-                      : 'Criar Conta Médica'
-                    : isEn
-                      ? 'Sign in to UltrAI Med'
-                      : 'Acessar o UltrAI Med'}
+                    ? tr(
+                        'Criar Conta Médica',
+                        'Create Medical Account',
+                        'Crear Cuenta Médica'
+                      )
+                    : tr(
+                        'Acessar o UltrAI Med',
+                        'Sign in to UltrAI Med',
+                        'Acceder a UltrAI Med'
+                      )}
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {viewMode === 'payment'
-                  ? isEn
-                    ? 'Monthly access to AI reporting, reference measurements, and clinical copilot.'
-                    : 'Acesso completo a laudos com IA, tabela de medidas e copiloto clínico.'
-                  : isEn
-                    ? '3-day free trial included for new medical accounts.'
-                    : 'Teste completo por 3 dias grátis para novas contas médicas.'}
+                  ? tr(
+                      'Acesso completo a laudos com IA, tabela de medidas e copiloto clínico.',
+                      'Monthly access to AI reporting, reference measurements, and clinical copilot.',
+                      'Acceso completo a informes con IA, tabla de medidas y copiloto clínico.'
+                    )
+                  : tr(
+                      'Teste completo por 3 dias grátis para novas contas médicas.',
+                      '3-day free trial included for new medical accounts.',
+                      'Prueba completa de 3 días gratis para nuevas cuentas médicas.'
+                    )}
               </p>
 
               {/* Mode switcher between Login & Register (hidden in payment view) */}
@@ -236,7 +247,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
-                    {isEn ? 'Sign In' : 'Entrar'}
+                    {tr('Entrar', 'Sign In', 'Iniciar Sesión')}
                   </button>
                   <button
                     type="button"
@@ -251,7 +262,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
-                    {isEn ? '3 Days Free' : '3 Dias Grátis'}
+                    {tr('3 Dias Grátis', '3 Days Free', '3 Días Gratis')}
                   </button>
                 </div>
               )}
@@ -262,7 +273,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
               <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {isEn ? 'Email' : 'E-mail profissional'}
+                    {tr('E-mail profissional', 'Email', 'Correo profesional')}
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -279,7 +290,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {isEn ? 'Password' : 'Senha'}
+                    {tr('Senha', 'Password', 'Contraseña')}
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -295,7 +306,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                       type="button"
                       onClick={() => setShowLoginPassword((prev) => !prev)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                      aria-label={isEn ? 'Toggle password visibility' : 'Mostrar ou ocultar senha'}
+                      aria-label={tr(
+                        'Mostrar ou ocultar senha',
+                        'Toggle password visibility',
+                        'Mostrar u ocultar contraseña'
+                      )}
                     >
                       {showLoginPassword ? (
                         <EyeOff className="w-4 h-4" />
@@ -321,12 +336,16 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                       <div>
                         <p className="font-bold">
                           {expiredAccount
-                            ? isEn
-                              ? 'Free Trial Expired / Subscription Required'
-                              : 'Período Grátis Expirado / Assinatura Pendente'
-                            : isEn
-                              ? 'Unable to Sign In'
-                              : 'Falha ao entrar'}
+                            ? tr(
+                                'Período Grátis Expirado / Assinatura Pendente',
+                                'Free Trial Expired / Subscription Required',
+                                'Período de Prueba Expirado / Suscripción Requerida'
+                              )
+                            : tr(
+                                'Falha ao entrar',
+                                'Unable to Sign In',
+                                'Error al iniciar sesión'
+                              )}
                         </p>
                         <p className="mt-0.5 leading-relaxed">{loginError}</p>
                       </div>
@@ -340,9 +359,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                       >
                         <CreditCard className="w-3.5 h-3.5 text-cyan-300" />
                         <span>
-                          {isEn
-                            ? 'Go to Payment & Reactivate Access'
-                            : 'Ir para Pagamento e Liberar Acesso'}
+                          {tr(
+                            'Ir para Pagamento e Liberar Acesso',
+                            'Go to Payment & Reactivate Access',
+                            'Ir a Pago y Reactivar Acceso'
+                          )}
                         </span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
@@ -354,16 +375,20 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                   type="submit"
                   className="w-full py-3 px-4 rounded-xl bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-colors"
                 >
-                  <span>{isEn ? 'Sign In' : 'Entrar no UltrAI Med'}</span>
+                  <span>
+                    {tr('Entrar no UltrAI Med', 'Sign In', 'Entrar en UltrAI Med')}
+                  </span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
                 {/* Quick Test Helpers (Prototype without Backend) */}
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
                   <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 text-center">
-                    {isEn
-                      ? 'Quick test accounts (local prototype):'
-                      : 'Atalhos de teste (protótipo sem backend):'}
+                    {tr(
+                      'Atalhos de teste (protótipo sem backend):',
+                      'Quick test accounts (local prototype):',
+                      'Accesos rápidos de prueba (prototipo local):'
+                    )}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -371,14 +396,18 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                       onClick={() => handleFillTestAccount('trial')}
                       className="px-2.5 py-2 rounded-lg text-[11px] font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
                     >
-                      {isEn ? '3-Day Active Trial' : 'Conta 3d Grátis'}
+                      {tr('Conta 3d Grátis', '3-Day Active Trial', 'Cuenta 3d Gratis')}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleFillTestAccount('expired')}
                       className="px-2.5 py-2 rounded-lg text-[11px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 transition-colors"
                     >
-                      {isEn ? 'Expired Trial (Paywall)' : 'Conta Expirada (Erro)'}
+                      {tr(
+                        'Conta Expirada (Erro)',
+                        'Expired Trial (Paywall)',
+                        'Cuenta Expirada (Error)'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -391,15 +420,21 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                 <div className="p-3 rounded-xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60 flex items-center gap-2.5 text-xs text-teal-900 dark:text-cyan-200">
                   <Sparkles className="w-4 h-4 text-teal-700 dark:text-cyan-400 shrink-0" />
                   <span>
-                    {isEn
-                      ? 'Enjoy 3 full days free. Your name & license automatically sign your reports.'
-                      : 'Ganhe 3 dias grátis completos. Seu nome e CRM assinam automaticamente seus laudos.'}
+                    {tr(
+                      'Ganhe 3 dias grátis completos. Seu nome e CRM assinam automaticamente seus laudos.',
+                      'Enjoy 3 full days free. Your name & license automatically sign your reports.',
+                      'Disfruta de 3 días gratis completos. Tu nombre y matrícula firman automáticamente tus informes.'
+                    )}
                   </span>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {isEn ? 'Full Name' : 'Nome Completo do(a) Médico(a)'}
+                    {tr(
+                      'Nome Completo do(a) Médico(a)',
+                      'Full Name',
+                      'Nombre Completo del/de la Médico/a'
+                    )}
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -408,7 +443,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                       required
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
-                      placeholder={isEn ? 'Dr. Sarah Jenkins' : 'Dra. Ana Paula Souza'}
+                      placeholder={tr(
+                        'Dra. Ana Paula Souza',
+                        'Dr. Sarah Jenkins',
+                        'Dra. Lucía Mendoza'
+                      )}
                       className="w-full text-sm pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     />
                   </div>
@@ -416,7 +455,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {isEn ? 'Medical License / ID' : 'CRM / Registro Profissional'}
+                    {tr(
+                      'CRM / Registro Profissional',
+                      'Medical License / ID',
+                      'Matrícula / Colegiado Médico'
+                    )}
                   </label>
                   <div className="relative">
                     <Award className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -425,7 +468,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                       required
                       value={regCrm}
                       onChange={(e) => setRegCrm(e.target.value)}
-                      placeholder={isEn ? 'MD / License 123456' : 'CRM/SP 123456'}
+                      placeholder={tr(
+                        'CRM/SP 123456',
+                        'MD / License 123456',
+                        'Matrícula / Col. 123456'
+                      )}
                       className="w-full text-sm pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     />
                   </div>
@@ -433,7 +480,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {isEn ? 'Email' : 'E-mail'}
+                    {tr('E-mail', 'Email', 'Correo electrónico')}
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -450,7 +497,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {isEn ? 'Password (min. 6 chars)' : 'Senha (mín. 6 caracteres)'}
+                    {tr(
+                      'Senha (mín. 6 caracteres)',
+                      'Password (min. 6 chars)',
+                      'Contraseña (mín. 6 caracteres)'
+                    )}
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -491,7 +542,13 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                   className="w-full py-3 px-4 rounded-xl bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-colors"
                 >
                   <Sparkles className="w-4 h-4 text-cyan-300" />
-                  <span>{isEn ? 'Start 3-Day Free Trial' : 'Começar 3 Dias Grátis'}</span>
+                  <span>
+                    {tr(
+                      'Começar 3 Dias Grátis',
+                      'Start 3-Day Free Trial',
+                      'Comenzar 3 Días Gratis'
+                    )}
+                  </span>
                 </button>
               </form>
             )}
@@ -502,7 +559,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                 {expiredAccount && (
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs space-y-0.5">
                     <span className="text-[11px] uppercase font-bold text-teal-700 dark:text-cyan-400 block">
-                      {isEn ? 'Selected Account' : 'Conta Selecionada'}
+                      {tr('Conta Selecionada', 'Selected Account', 'Cuenta Seleccionada')}
                     </span>
                     <p className="font-bold text-slate-900 dark:text-slate-100">
                       {expiredAccount.name} ({expiredAccount.crm})
@@ -514,7 +571,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                 {/* Plan cards */}
                 <div className="space-y-2">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {isEn ? 'Choose Your Plan' : 'Escolha seu Plano'}
+                    {tr('Escolha seu Plano', 'Choose Your Plan', 'Elige tu Plan')}
                   </label>
 
                   <button
@@ -528,10 +585,14 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                   >
                     <div>
                       <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                        {isEn ? 'Monthly Plan' : 'Plano Mensal'}
+                        {tr('Plano Mensal', 'Monthly Plan', 'Plan Mensual')}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {isEn ? 'Cancel anytime' : 'Renovação mensal · Cancele quando quiser'}
+                        {tr(
+                          'Renovação mensal · Cancele quando quiser',
+                          'Cancel anytime',
+                          'Renovación mensual · Cancela cuando quieras'
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
@@ -539,7 +600,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                         R$ 89,90
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                        /{isEn ? 'mo' : 'mês'}
+                        /{tr('mês', 'mo', 'mes')}
                       </span>
                     </div>
                   </button>
@@ -556,14 +617,18 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                          {isEn ? 'Annual Plan' : 'Plano Anual'}
+                          {tr('Plano Anual', 'Annual Plan', 'Plan Anual')}
                         </p>
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
                           -15%
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {isEn ? 'Billed annually' : 'Melhor custo-benefício'}
+                        {tr(
+                          'Melhor custo-benefício',
+                          'Billed annually',
+                          'Mejor relación costo-beneficio'
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
@@ -571,7 +636,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                         R$ 75,90
                       </span>
                       <span className="block text-[11px] text-slate-500 dark:text-slate-400">
-                        /{isEn ? 'mo' : 'mês'}
+                        /{tr('mês', 'mo', 'mes')}
                       </span>
                     </div>
                   </button>
@@ -580,7 +645,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                 {/* Payment method preview */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    {isEn ? 'Payment Method' : 'Forma de Pagamento'}
+                    {tr('Forma de Pagamento', 'Payment Method', 'Método de Pago')}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -593,7 +658,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                       }`}
                     >
                       <CreditCard className="w-3.5 h-3.5" />
-                      <span>{isEn ? 'Credit Card' : 'Cartão'}</span>
+                      <span>{tr('Cartão', 'Credit Card', 'Tarjeta')}</span>
                     </button>
                     <button
                       type="button"
@@ -613,9 +678,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                 <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400 flex items-start gap-2">
                   <ShieldCheck className="w-4 h-4 text-teal-700 dark:text-cyan-400 shrink-0 mt-0.5" />
                   <span>
-                    {isEn
-                      ? 'Prototype checkout (no backend): clicking below simulates instant payment confirmation and unlocks access.'
-                      : 'Checkout simulado (sem backend): ao confirmar abaixo, o pagamento é simulado na hora e o acesso é liberado.'}
+                    {tr(
+                      'Checkout simulado (sem backend): ao confirmar abaixo, o pagamento é simulado na hora e o acesso é liberado.',
+                      'Prototype checkout (no backend): clicking below simulates instant payment confirmation and unlocks access.',
+                      'Pago simulado (sin backend): al confirmar abajo, se simula el pago al instante y se habilita el acceso.'
+                    )}
                   </span>
                 </div>
 
@@ -626,9 +693,11 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                 >
                   <CheckCircle2 className="w-4 h-4 text-cyan-300" />
                   <span>
-                    {isEn
-                      ? 'Confirm Payment (Simulated) & Unlock'
-                      : 'Confirmar Pagamento (Simulado) e Liberar'}
+                    {tr(
+                      'Confirmar Pagamento (Simulado) e Liberar',
+                      'Confirm Payment (Simulated) & Unlock',
+                      'Confirmar Pago (Simulado) y Activar'
+                    )}
                   </span>
                 </button>
 
@@ -646,12 +715,8 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>
                     {existingSession && onCancelUpgrade
-                      ? isEn
-                        ? 'Back to Workstation'
-                        : 'Voltar para o App'
-                      : isEn
-                        ? 'Back to Sign In'
-                        : 'Voltar para o Login'}
+                      ? tr('Voltar para o App', 'Back to Workstation', 'Volver a la Estación')
+                      : tr('Voltar para o Login', 'Back to Sign In', 'Volver al Inicio de Sesión')}
                   </span>
                 </button>
               </div>

@@ -55,7 +55,9 @@ export const CameraModal: React.FC<CameraModalProps> = ({
           setErrorMsg(
             lang === 'en'
               ? `Camera access unavailable or blocked (${message}). You can still use your device native camera with the button below.`
-              : `Acesso à câmera indisponível ou bloqueado (${message}). Você também pode usar a câmera nativa do celular através do botão abaixo.`
+              : lang === 'es'
+                ? `Acceso a la cámara no disponible o bloqueado (${message}). También puedes usar la cámara nativa del teléfono con el botón de abajo.`
+                : `Acesso à câmera indisponível ou bloqueado (${message}). Você também pode usar a câmera nativa do celular através do botão abaixo.`
           );
           setIsLoading(false);
         }
