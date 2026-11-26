@@ -11,7 +11,6 @@ export interface PhysicianAccount {
   trialEndsAt: string;
   subscriptionStatus: SubscriptionStatus;
   subscriptionEndsAt?: string;
-  plan?: SubscriptionPlan;
 }
 
 export interface AuthSession {

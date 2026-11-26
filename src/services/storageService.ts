@@ -3,7 +3,7 @@ import { UltrasoundExam } from '../types/ultrasound';
 import { StandardizedRadiologyReport } from '../types/report';
 import { ChatMessage } from '../types/chat';
 
-export interface StorageData {
+interface StorageData {
   patients: Patient[];
   exams: UltrasoundExam[];
   reports: Record<string, StandardizedRadiologyReport>; // examId -> Report
@@ -131,7 +131,6 @@ const INITIAL_EXAMS: UltrasoundExam[] = [
     id: 'exam-001',
     patientId: 'pat-001',
     specialty: 'ABDOMEN',
-    urgency: 'URGENT',
     status: 'IN_PROGRESS',
     transducer: 'CONVEX',
     manualFindingText: 'Vesícula biliar distendida, cálculo impactado no infundíbulo medindo 19 mm com sombra acústica posterior. Parede espessada medindo 5.4 mm com halo hipoecogênico e líquido pericolecístico. Sinal de Murphy ultrassonográfico positivo.',
@@ -140,7 +139,6 @@ const INITIAL_EXAMS: UltrasoundExam[] = [
     id: 'exam-002',
     patientId: 'pat-002',
     specialty: 'THYROID',
-    urgency: 'PRIORITY',
     status: 'PENDING',
     transducer: 'LINEAR',
     manualFindingText: 'Nódulo sólido marcadamente hipoecoico em terço médio do lobo direito da tireoide, medindo 15 x 11 x 13 mm. Relação mais alto que largo, margens microlobuladas e microcalcificações internas puntiformes.',
@@ -149,7 +147,6 @@ const INITIAL_EXAMS: UltrasoundExam[] = [
     id: 'exam-003',
     patientId: 'pat-003',
     specialty: 'POCUS_FAST',
-    urgency: 'EMERGENCY',
     status: 'IN_PROGRESS',
     transducer: 'SECTOR',
     manualFindingText: 'E-FAST Trauma: Lâmina líquida anecoica franca em recesso hepatorrenal de Morrison (espessura 16 mm) e lâmina em recesso esplenorrenal. Janela pericárdica livre e deslizamento pleural preservado bilateralmente.',
@@ -158,7 +155,6 @@ const INITIAL_EXAMS: UltrasoundExam[] = [
     id: 'exam-004',
     patientId: 'pat-004',
     specialty: 'BREAST',
-    urgency: 'ELECTIVE',
     status: 'REPORTED',
     transducer: 'LINEAR',
     manualFindingText: 'Nódulo anecoico oval, circunscrito, de paredes finas, reforço acústico posterior límpido, no quadrante superior externo da mama esquerda (posição 2h), medindo 8 x 5 mm. Sem vascularização ao Doppler.',
@@ -167,7 +163,6 @@ const INITIAL_EXAMS: UltrasoundExam[] = [
     id: 'exam-005',
     patientId: 'pat-005',
     specialty: 'URINARY_KIDNEYS',
-    urgency: 'URGENT',
     status: 'PENDING',
     transducer: 'CONVEX',
     manualFindingText: 'Moderada a importante ectasia pielocalicinal no rim esquerdo. Imagem hiperecogênica com 8 mm no terço distal do ureter esquerdo / junção ureterovesical, produzindo sombra acústica e artefato de cintilação.',
@@ -216,7 +211,7 @@ class StorageService {
     }
   }
 
-  public saveData(data: StorageData): void {
+  private saveData(data: StorageData): void {
     if (!this.isBrowser()) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -281,7 +276,6 @@ class StorageService {
     const exam = data.exams.find((e) => e.id === report.examId);
     if (exam) {
       exam.status = 'REPORTED';
-      exam.urgency = report.urgencyLevel;
     }
     this.saveData(data);
   }

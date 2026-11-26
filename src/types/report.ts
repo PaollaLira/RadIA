@@ -1,13 +1,12 @@
-export type UrgencyLevel = 'EMERGENCY' | 'URGENT' | 'PRIORITY' | 'ELECTIVE';
+type UrgencyLevel = 'EMERGENCY' | 'URGENT' | 'PRIORITY' | 'ELECTIVE';
 
-export interface ReportFinding {
+interface ReportFinding {
   region: string;
   description: string;
   measurements?: string;
-  significance: 'normal' | 'benign' | 'indeterminate' | 'suspicious' | 'critical';
 }
 
-export interface MedicalCitation {
+interface MedicalCitation {
   guidelineOrStudy: string;
   organizationOrJournal: string;
   year: number;
@@ -45,7 +44,6 @@ export interface StandardizedRadiologyReport {
 
   // 4. ESTRATIFICAÇÃO DE RISCO & GRAVIDADE
   riskStratification: {
-    level: UrgencyLevel;
     clinicalFlags: string[];
     actionRecommendation: string;
   };

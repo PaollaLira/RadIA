@@ -7,7 +7,6 @@ type TranslationDictionary = (typeof TRANSLATIONS)[AppLanguage];
 
 interface LanguageContextValue {
   lang: AppLanguage;
-  setLang: (lang: AppLanguage) => void;
   toggleLang: () => void;
   t: TranslationDictionary;
 }
@@ -35,7 +34,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [lang]);
 
-  const setLang = (next: AppLanguage) => setLangState(next);
   const toggleLang = () =>
     setLangState((prev) =>
       prev === 'pt' ? 'en' : prev === 'en' ? 'es' : 'pt'
@@ -45,7 +43,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     <LanguageContext.Provider
       value={{
         lang,
-        setLang,
         toggleLang,
         t: TRANSLATIONS[lang],
       }}

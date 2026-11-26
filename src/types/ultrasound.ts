@@ -31,7 +31,6 @@ export interface UltrasoundExam {
   id: string;
   patientId: string;
   specialty: UltrasoundSpecialty | '';
-  urgency: 'EMERGENCY' | 'URGENT' | 'PRIORITY' | 'ELECTIVE';
   status: 'PENDING' | 'IN_PROGRESS' | 'REPORTED';
   transducer: TransducerType | '';
   capturedImageUrl?: string;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { storageService } from './services/storageService';
 import { aiRadiologyEngine } from './services/aiRadiologyEngine';
 import { Patient } from './types/patient';
@@ -250,7 +250,6 @@ export default function App() {
       id: newExamId,
       patientId: newPatientId,
       specialty: '',
-      urgency: 'ELECTIVE',
       status: 'PENDING',
       transducer: '',
       manualFindingText: '',

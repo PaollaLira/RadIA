@@ -1,4 +1,4 @@
-export interface PriorExam {
+interface PriorExam {
   date: string;
   modality: 'USG' | 'TC' | 'RM' | 'MAMOGRAFIA';
   region: string;

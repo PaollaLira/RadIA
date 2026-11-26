@@ -294,7 +294,6 @@ class AuthService {
     const now = Date.now();
     const durationDays = plan === 'annual' ? 365 : 30;
     account.subscriptionStatus = 'active';
-    account.plan = plan;
     account.subscriptionEndsAt = new Date(now + durationDays * DAY_MS).toISOString();
 
     store.activeAccountId = account.id;

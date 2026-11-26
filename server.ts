@@ -193,7 +193,7 @@ async function generateWithRetryAndFallback(params: {
           contents,
           config: target.cfg,
         });
-        return { response, modelUsed: target.model };
+        return response;
       } catch (err: unknown) {
         lastError = err;
         const retryable = isRetryableGeminiError(err);
@@ -240,10 +240,8 @@ interface PatientContextPayload {
 }
 
 interface ExamContextPayload {
-  id?: string;
   specialty?: string;
   transducer?: string;
-  urgency?: string;
   manualFindingText?: string;
 }
 
@@ -310,17 +308,13 @@ const REPORT_RESPONSE_SCHEMA = {
     riskStratification: {
       type: Type.OBJECT,
       properties: {
-        level: {
-          type: Type.STRING,
-          description: "EMERGENCY, URGENT, PRIORITY ou ELECTIVE.",
-        },
         clinicalFlags: {
           type: Type.ARRAY,
           items: { type: Type.STRING },
         },
         actionRecommendation: { type: Type.STRING },
       },
-      required: ["level", "clinicalFlags", "actionRecommendation"],
+      required: ["clinicalFlags", "actionRecommendation"],
     },
     medicalLiterature: {
       type: Type.ARRAY,
@@ -514,7 +508,7 @@ Gere o laudo estruturado completo de 5 seções em JSON conforme o schema especi
       }
       parts.push({ text: userPrompt });
 
-      const { response } = await generateWithRetryAndFallback({
+      const response = await generateWithRetryAndFallback({
         ai,
         primaryModel: PRIMARY_CLINICAL_MODEL,
         fallbackModel: FALLBACK_FAST_MODEL,
@@ -651,7 +645,7 @@ ${reportSummary ? `\nLAUDO ATUAL GERADO:\n${reportSummary}` : ""}`;
         };
       });
 
-      const { response, modelUsed } = await generateWithRetryAndFallback({
+      const response = await generateWithRetryAndFallback({
         ai,
         primaryModel: selectedModel,
         fallbackModel: isFast ? PRIMARY_CLINICAL_MODEL : FALLBACK_FAST_MODEL,
@@ -673,7 +667,6 @@ ${reportSummary ? `\nLAUDO ATUAL GERADO:\n${reportSummary}` : ""}`;
             : lang === "es"
             ? "No fue posible generar una respuesta clínica en este momento."
             : "Não foi possível gerar uma resposta clínica no momento."),
-        modelUsed,
       });
     } catch (err: unknown) {
       console.error("Erro em /api/chat:", err);

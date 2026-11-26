@@ -19,7 +19,7 @@ export type CalculatorType =
   | 'spleen'
   | 'fetal_weight';
 
-export interface LocalizedText {
+interface LocalizedText {
   pt: string;
   en: string;
   es: string;
@@ -42,7 +42,7 @@ export interface ReferenceMeasurement {
   density?: number;
 }
 
-export interface PediatricOrganRow {
+interface PediatricOrganRow {
   ageBand: PediatricAgeBandId;
   normalRange: LocalizedText;
   minVal?: number;
@@ -52,7 +52,7 @@ export interface PediatricOrganRow {
   note?: LocalizedText;
 }
 
-export interface PediatricOrganTable {
+interface PediatricOrganTable {
   id: string;
   organ: LocalizedText;
   parameter: LocalizedText;

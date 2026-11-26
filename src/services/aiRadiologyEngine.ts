@@ -3,7 +3,7 @@ import { UltrasoundExam } from '../types/ultrasound';
 import { StandardizedRadiologyReport } from '../types/report';
 import { AppLanguage } from '../i18n/translations';
 
-export class AiRadiologyEngine {
+class AiRadiologyEngine {
   /**
    * Processa a análise do exame de ultrassonografia via Gemini no backend (/api/analyze-exam)
    * e retorna o laudo estruturado completo no padrão de 5 seções para imagem ou texto.
