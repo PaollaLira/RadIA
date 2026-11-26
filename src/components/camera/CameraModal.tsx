@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { cameraService, CameraCapabilitiesState } from '../../services/cameraService';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { Camera, X, Zap, ZapOff, RotateCcw, Check, Upload, AlertCircle } from 'lucide-react';
+import { BrandLoader } from '../common/BrandLoader';
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -204,7 +205,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
 
             {isLoading && (
               <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center text-slate-300 gap-3">
-                <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <BrandLoader size="lg" />
                 <span className="text-xs font-medium">{t.camera.starting}</span>
               </div>
             )}

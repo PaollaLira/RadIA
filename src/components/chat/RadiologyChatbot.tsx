@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Eye,
 } from 'lucide-react';
+import { BrandLoader } from '../common/BrandLoader';
 
 async function resizeDataUrl(
   sourceDataUrl: string,
@@ -350,7 +351,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
         {isSending && (
           <div className="flex items-start">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-              <div className="w-3.5 h-3.5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+              <BrandLoader size="sm" />
               <span>{t.chat.thinking}</span>
             </div>
           </div>

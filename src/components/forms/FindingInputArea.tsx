@@ -3,6 +3,7 @@ import { UltrasoundSpecialty, TransducerType } from '../../types/ultrasound';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { AppLanguage } from '../../i18n/translations';
 import { Camera, FileText, Sparkles, CheckCircle, Wand2, User, MessageSquare } from 'lucide-react';
+import { BrandLoader } from '../common/BrandLoader';
 
 interface FindingInputAreaProps {
   inputMode: 'CAMERA_IMAGE' | 'TEXT_FINDING';
@@ -542,28 +543,37 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
       )}
 
       {/* Quick Clinical Shortcuts */}
-      {quickPhrasesForSpecialty && quickPhrasesForSpecialty.length > 0 && (
-        <div className="mb-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-            <Wand2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-            <span>{t.findingInput.quickShortcuts}</span>
-          </div>
-          <div className="space-y-1.5">
-            {quickPhrasesForSpecialty.map((phrase, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleApplyPresetPhrase(phrase)}
-                className="w-full text-left p-2 rounded-lg text-xs bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 transition-colors text-slate-700 dark:text-slate-300 line-clamp-2"
-              >
-                <span className="font-semibold text-teal-700 dark:text-cyan-400 mr-1.5">
-                  {t.findingInput.optionPrefix} {idx + 1}:
-                </span>
-                {phrase}
-              </button>
-            ))}
-          </div>
+      <div className="mb-3">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+          <Wand2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+          <span>{t.findingInput.quickShortcuts}</span>
         </div>
-      )}
+        <div className="space-y-1.5">
+          <button
+            type="button"
+            onClick={() => handleApplyPresetPhrase(t.findingInput.noFindingsShortcut)}
+            className="w-full text-left p-2 rounded-lg text-xs bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 transition-colors text-slate-700 dark:text-slate-300"
+          >
+            <span className="font-semibold text-emerald-700 dark:text-emerald-400 mr-1.5">
+              {t.findingInput.normalPrefix}:
+            </span>
+            {t.findingInput.noFindingsShortcut}
+          </button>
+          {quickPhrasesForSpecialty?.map((phrase, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleApplyPresetPhrase(phrase)}
+              className="w-full text-left p-2 rounded-lg text-xs bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 transition-colors text-slate-700 dark:text-slate-300 line-clamp-2"
+            >
+              <span className="font-semibold text-teal-700 dark:text-cyan-400 mr-1.5">
+                {t.findingInput.optionPrefix} {idx + 1}:
+              </span>
+              {phrase}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Main Textarea for Findings */}
       <div className="mb-4">
@@ -590,7 +600,7 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
         >
           {isAnalyzing ? (
             <>
-              <div className="w-4 h-4 border-2 border-cyan-300 border-t-transparent rounded-full animate-spin" />
+              <BrandLoader size="sm" />
               <span>{t.findingInput.processing}</span>
             </>
           ) : (
