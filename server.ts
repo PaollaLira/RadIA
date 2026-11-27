@@ -325,13 +325,24 @@ function formatViewerMeasurements(
 ): string {
   if (!measurements || measurements.length === 0) return "";
   return measurements
-    .filter((m) => m && typeof m.value === "string" && m.value.trim() !== "")
-    .map(
-      (m, idx) =>
-        `${idx + 1}. ${m.label?.trim() ? `${m.label.trim()}: ` : ""}${m.value.trim()}${
-          m.source === "caliper" ? " (caliper)" : ""
-        }`
+    .filter(
+      (m) =>
+        m &&
+        ((typeof m.value === "string" && m.value.trim() !== "") ||
+          (typeof m.label === "string" && m.label.trim() !== ""))
     )
+    .map((m, idx) => {
+      const label = typeof m.label === "string" ? m.label.trim() : "";
+      const val = typeof m.value === "string" ? m.value.trim() : "";
+      const caliperSuffix = m.source === "caliper" ? " (caliper)" : "";
+      if (label && val) {
+        return `${idx + 1}. ${label}: ${val}${caliperSuffix}`;
+      }
+      if (label) {
+        return `${idx + 1}. ${label}`;
+      }
+      return `${idx + 1}. ${val}${caliperSuffix}`;
+    })
     .join(" | ");
 }
 
@@ -434,10 +445,10 @@ DIRETRIZES OBRIGATÓRIAS:
 
       const measurementsMandatoryNote = viewerMeasurementsText
         ? lang === "en"
-          ? `\nMANDATORY IMAGE MEASUREMENTS ENTERED BY PHYSICIAN: ${viewerMeasurementsText}\nYou MUST incorporate every single measurement above into the corresponding anatomical entry in Section 2 ("findings[].measurements" and "findings[].description") and reflect clinically relevant dimensions in Section 3 ("diagnosticImpression") without altering or omitting the physician's numeric values.`
+          ? `\nMANDATORY IMAGE STRUCTURES & MEASUREMENTS ENTERED BY PHYSICIAN: ${viewerMeasurementsText}\nYou MUST incorporate every single structure and measurement above into the corresponding anatomical entry in Section 2 ("findings[].measurements" and "findings[].description") and reflect clinically relevant items in Section 3 ("diagnosticImpression") without altering or omitting the physician's entries.`
           : lang === "es"
-          ? `\nMEDICIONES OBLIGATORIAS REGISTRADAS EN LA IMAGEN POR EL MÉDICO: ${viewerMeasurementsText}\nDEBE incorporar todas estas mediciones en la estructura correspondiente de la Sección 2 ("findings[].measurements" y "findings[].description") y reflejar las dimensiones relevantes en la Sección 3 ("diagnosticImpression") sin omitir ni alterar los valores numéricos.`
-          : `\nMEDIÇÕES OBRIGATÓRIAS REGISTRADAS NA IMAGEM PELO MÉDICO: ${viewerMeasurementsText}\nInclua OBRIGATORIAMENTE todas as medições acima na estrutura anatômica correspondente da Seção 2 ("findings[].measurements" e "findings[].description") e cite as dimensões clinicamente relevantes na Seção 3 ("diagnosticImpression"), sem omitir nem alterar os valores numéricos informados.`
+          ? `\nESTRUCTURAS Y MEDICIONES OBLIGATORIAS REGISTRADAS EN LA IMAGEN POR EL MÉDICO: ${viewerMeasurementsText}\nDEBE incorporar todas estas estructuras y mediciones en la Sección 2 ("findings[].measurements" y "findings[].description") y reflejar los hallazgos relevantes en la Sección 3 ("diagnosticImpression") sin omitir ni alterar los valores informados.`
+          : `\nESTRUTURAS E MEDIÇÕES OBRIGATÓRIAS REGISTRADAS NA IMAGEM PELO MÉDICO: ${viewerMeasurementsText}\nInclua OBRIGATORIAMENTE todas as estruturas e medições acima na Seção 2 ("findings[].measurements" e "findings[].description") e cite os achados/dimensões relevantes na Seção 3 ("diagnosticImpression"), sem omitir nem alterar os dados informados.`
         : "";
 
       const userPrompt =

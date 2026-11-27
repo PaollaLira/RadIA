@@ -651,59 +651,46 @@ export default function App() {
         ) : (
           activePatient &&
           activeExam && (
-            <div className="space-y-6">
-              {/* Split Grid: Visualizador (quando houver imagem) / Formulário & Laudo */}
-              <div
-              className={
-                capturedImage
-                  ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'
-                  : 'max-w-4xl mx-auto space-y-6'
-              }
-            >
-              {/* Coluna Esquerda (somente quando há imagem carregada) */}
-              {capturedImage && (
-                <div className="lg:col-span-5 space-y-6">
-                  <UltrasoundViewer
-                    imageUrl={capturedImage}
-                    examTitle={`USG ${specialty ? t.specialties[specialty] : lang === 'pt' ? 'Geral' : 'General'} — ${activePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
-                    onRetakeOrUpload={() => setIsCameraOpen(true)}
-                    measurements={viewerMeasurements}
-                    onMeasurementsChange={handleViewerMeasurementsChange}
-                    onActiveCaliperChange={setActiveCaliperValue}
-                  />
-                </div>
-              )}
-
-              {/* Coluna Principal */}
-              <div ref={formTopRef} className={`${capturedImage ? 'lg:col-span-7' : ''} space-y-6 scroll-mt-20`}>
-                <FindingInputArea
-                  inputMode={inputMode}
-                  onChangeInputMode={setInputMode}
-                  patientName={patientName}
-                  onChangePatientName={handlePatientNameChange}
-                  patientCpf={patientCpf}
-                  onChangePatientCpf={handlePatientCpfChange}
-                  patientBirthDate={patientBirthDate}
-                  onChangePatientBirthDate={handlePatientBirthDateChange}
-                  patientAge={patientAge}
-                  onChangePatientAge={handlePatientAgeChange}
-                  patientGender={patientGender}
-                  onChangePatientGender={handlePatientGenderChange}
-                  specialty={specialty}
-                  onChangeSpecialty={handleSpecialtyChange}
-                  transducer={transducer}
-                  onChangeTransducer={handleTransducerChange}
-                  textFinding={findingText}
-                  onChangeTextFinding={handleFindingTextChange}
-                  hasCapturedImage={!!capturedImage}
-                  onOpenLiveCamera={() => setIsCameraOpen(true)}
-                  onUploadImage={applyImageToActiveExam}
-                  onAnalyze={handleAnalyzeAndGenerateReport}
-                  isAnalyzing={isAnalyzing}
-                  hasExistingReport={!!activeReport}
-                  viewerMeasurementsCount={combinedViewerMeasurements.length}
-                  onOpenChat={() => setIsChatOpen(true)}
-                />
+            <div ref={formTopRef} className="max-w-4xl mx-auto space-y-6 scroll-mt-20">
+              <FindingInputArea
+                inputMode={inputMode}
+                onChangeInputMode={setInputMode}
+                patientName={patientName}
+                onChangePatientName={handlePatientNameChange}
+                patientCpf={patientCpf}
+                onChangePatientCpf={handlePatientCpfChange}
+                patientBirthDate={patientBirthDate}
+                onChangePatientBirthDate={handlePatientBirthDateChange}
+                patientAge={patientAge}
+                onChangePatientAge={handlePatientAgeChange}
+                patientGender={patientGender}
+                onChangePatientGender={handlePatientGenderChange}
+                specialty={specialty}
+                onChangeSpecialty={handleSpecialtyChange}
+                transducer={transducer}
+                onChangeTransducer={handleTransducerChange}
+                textFinding={findingText}
+                onChangeTextFinding={handleFindingTextChange}
+                hasCapturedImage={!!capturedImage}
+                imageViewer={
+                  capturedImage ? (
+                    <UltrasoundViewer
+                      imageUrl={capturedImage}
+                      examTitle={`USG ${specialty ? t.specialties[specialty] : lang === 'pt' ? 'Geral' : 'General'} — ${activePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
+                      measurements={viewerMeasurements}
+                      onMeasurementsChange={handleViewerMeasurementsChange}
+                      onActiveCaliperChange={setActiveCaliperValue}
+                    />
+                  ) : undefined
+                }
+                onOpenLiveCamera={() => setIsCameraOpen(true)}
+                onUploadImage={applyImageToActiveExam}
+                onAnalyze={handleAnalyzeAndGenerateReport}
+                isAnalyzing={isAnalyzing}
+                hasExistingReport={!!activeReport}
+                viewerMeasurementsCount={combinedViewerMeasurements.length}
+                onOpenChat={() => setIsChatOpen(true)}
+              />
 
                 {analysisError && (
                   <div
@@ -762,9 +749,7 @@ export default function App() {
                     )
                   )}
                 </div>
-              </div>
             </div>
-          </div>
           )
         )}
       </main>
