@@ -124,12 +124,12 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-label={t.dataModal.title}
     >
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md max-h-full overflow-y-auto p-5 sm:p-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
           <div className="flex items-center gap-2">
             <Database className="w-5 h-5 text-teal-800 dark:text-cyan-400" />

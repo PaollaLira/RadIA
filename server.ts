@@ -461,22 +461,44 @@ Gere o laudo estruturado enxuto e objetivo de 4 seções em JSON conforme o sche
       }
       parts.push({ text: userPrompt });
 
+      const isImageAnalysis =
+        inputMode === "CAMERA_IMAGE" && Boolean(imageDataUrl);
+      const primaryExamModel = isImageAnalysis
+        ? PRIMARY_CLINICAL_MODEL
+        : FALLBACK_FAST_MODEL;
+      const fallbackExamModel = isImageAnalysis
+        ? FALLBACK_FAST_MODEL
+        : PRIMARY_CLINICAL_MODEL;
+
       const response = await generateWithRetryAndFallback({
         ai,
-        primaryModel: PRIMARY_CLINICAL_MODEL,
-        fallbackModel: FALLBACK_FAST_MODEL,
+        primaryModel: primaryExamModel,
+        fallbackModel: fallbackExamModel,
         contents: { parts },
-        config: {
-          systemInstruction,
-          responseMimeType: "application/json",
-          responseSchema: REPORT_RESPONSE_SCHEMA,
-          thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
-        },
-        fallbackConfig: {
-          systemInstruction,
-          responseMimeType: "application/json",
-          responseSchema: REPORT_RESPONSE_SCHEMA,
-        },
+        config: isImageAnalysis
+          ? {
+              systemInstruction,
+              responseMimeType: "application/json",
+              responseSchema: REPORT_RESPONSE_SCHEMA,
+              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+            }
+          : {
+              systemInstruction,
+              responseMimeType: "application/json",
+              responseSchema: REPORT_RESPONSE_SCHEMA,
+            },
+        fallbackConfig: isImageAnalysis
+          ? {
+              systemInstruction,
+              responseMimeType: "application/json",
+              responseSchema: REPORT_RESPONSE_SCHEMA,
+            }
+          : {
+              systemInstruction,
+              responseMimeType: "application/json",
+              responseSchema: REPORT_RESPONSE_SCHEMA,
+              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+            },
       });
 
       const rawText = (response.text ?? "{}").trim();
@@ -534,12 +556,16 @@ Gere o laudo estruturado enxuto e objetivo de 4 seções em JSON conforme o sche
         lang === "en"
           ? `You are UltrAI Med Chat, a medical copilot specialized in Radiology and Diagnostic Ultrasound (USG) integrated into the radiologist's workstation.
 
-YOUR ROLE:
-- Answer the radiologist's clinical questions during scanning and reporting (TI-RADS, BI-RADS USG, Bosniak criteria, normal anatomical measurements, differential diagnoses, urgent management, contrast contraindications given renal function/allergies).
-- When an ultrasound image is attached, carefully describe what you observe in the image (anatomical structures, echogenicity, margins, acoustic shadowing/enhancement, fluid collections, Doppler signals if present, and possible artifacts) and provide a clear clinical impression.
-- Maintain an objective, accurate, collaborative medical tone strictly in English.
-- Cite updated clinical guidelines and consensus statements (ACR, AIUM, CBR, ATLS, EAU, Fleischner, SBU, SBEM) whenever backing recommendations.
-- Never fabricate clinical data; if key patient or exam info is missing, clearly notify the physician.
+YOUR ROLE & STRICT EVIDENCE SCOPE:
+- Restrict your answers strictly to peer-reviewed medical literature and established diagnostic radiology/ultrasound guidelines (ACR, AIUM, CBR, ATLS, EAU, ISUOG, ESSR, Fleischner, SBU, SBEM). Politely decline non-medical topics and never speculate without clinical evidence; if guideline consensus is lacking or key patient/exam info is missing, state it clearly.
+- Answer clinical questions during scanning and reporting (TI-RADS, BI-RADS USG, Bosniak, normal anatomical measurements, differential diagnoses, urgent management, contrast contraindications).
+- When an ultrasound image is attached, concisely describe visible sonographic findings (structures, echogenicity, margins, acoustic shadowing/enhancement, fluid, Doppler) and diagnostic impression.
+- BE CONCISE AND DIRECT: Even in Clinical Reasoning mode, keep replies brief and scannable (max ~120-180 words or 3-5 short bullet points). Skip long introductions or verbose theory unless the physician explicitly asks for a deep dive.${
+            isFast
+              ? "\n- FAST CONSULT MODE: Maintain 100% clinical consistency with the active report and any prior reasoning in the conversation (do NOT alter diagnoses or recommendations), delivering the direct conclusion in 2-3 ultra-short bullet points (max ~80-100 words)."
+              : ""
+          }
+- Maintain an objective, collaborative medical tone strictly in English.
 
 ACTIVE PATIENT CLINICAL CONTEXT:
 ${contextText}
@@ -547,33 +573,42 @@ ${reportSummary ? `\nCURRENT GENERATED REPORT:\n${reportSummary}` : ""}`
           : lang === "es"
           ? `Eres UltrAI Med Chat, un copiloto médico especialista en Radiología y Ultrasonografía Diagnóstica (USG) integrado en la estación de trabajo del médico radiólogo.
 
-TU ROL:
-- Responder dudas clínicas durante el examen y la redacción del informe (criterios TI-RADS, BI-RADS USG, Bosniak, medidas anatómicas normales, diagnósticos diferenciales, conducta de urgencia, contraindicaciones de contraste según función renal y alergias).
-- Cuando se envíe una imagen ecográfica, describe objetivamente lo que observas (estructuras anatómicas visibles, ecogenicidad, contornos, sombra/refuerzo acústico posterior, colecciones líquidas, señales Doppler y posibles artefactos) y presenta la impresión diagnóstica probable.
-- Mantener un tono médico objetivo, preciso y colaborativo estrictamente en español.
-- Citar guías y consensos médicos actualizados (ACR, AIUM, CBR, ATLS, EAU, ISUOG, ESSR, Fleischner) al respaldar recomendaciones.
-- Nunca inventar datos clínicos no proporcionados; si falta información del estudio o antecedentes, indicarlo claramente al médico.
+TU ROL Y ALCANCE ESTRICTO EN LITERATURA MÉDICA:
+- Restringe tus respuestas exclusivamente a la literatura médica revisada por pares y guías consolidadas de radiología/ultrasonografía (ACR, AIUM, CBR, ATLS, EAU, ISUOG, ESSR, Fleischner, SBU, SBEM). Rechaza amablemente temas no médicos y no especules sin respaldo científico; si falta consenso o datos del estudio, indícalo claramente.
+- Responde dudas clínicas durante el examen (TI-RADS, BI-RADS USG, Bosniak, medidas normales, diagnósticos diferenciales, conducta de urgencia, contraindicaciones de contraste).
+- Cuando se envíe una imagen ecográfica, describe de forma breve los hallazgos visibles y la impresión diagnóstica probable.
+- SÉ CONCISO Y DIRECTO: Incluso en el modo Razonamiento Clínico, entrega respuestas breves y objetivas (máximo ~120-180 palabras o 3-5 viñetas cortas), sin introducciones largas ni explicaciones prolijas, salvo que el médico pida ampliar.${
+            isFast
+              ? "\n- MODO CONSULTA RÁPIDA: Mantén 100% de coherencia clínica con el informe activo y con el razonamiento previo de la conversación (sin cambiar diagnósticos ni conductas), entregando la síntesis directa en 2-3 puntos muy breves (máx. ~80-100 palabras)."
+              : ""
+          }
+- Mantener un tono médico objetivo y colaborativo estrictamente en español.
 
 CONTEXTO CLÍNICO ACTIVO DEL PACIENTE:
 ${contextText}
 ${reportSummary ? `\nINFORME ACTUAL GENERADO:\n${reportSummary}` : ""}`
           : `Você é o UltrAI Med Chat, um copiloto médico especialista em Radiologia e Ultrassonografia (USG) integrado à estação de trabalho do médico radiologista.
 
-SEU PAPEL:
-- Responder dúvidas clínicas do radiologista durante o exame e a confecção do laudo (critérios TI-RADS, BI-RADS USG, Bosniak, medidas anatômicas normais, diagnósticos diferenciais, condutas de urgência, preparo e contraindicações de exames complementares considerando função renal/alergias do paciente).
-- Quando uma imagem de ultrassonografia for enviada, descreva objetivamente o que você está vendo na imagem (estruturas anatômicas visíveis, ecogenicidade, contornos, sombra/reforço acústico posterior, coleções líquidas, sinais ao Doppler se presentes e possíveis artefatos) e apresente a impressão diagnóstica provável.
-- Manter tom médico objetivo, preciso e colaborativo em português do Brasil.
-- Citar diretrizes e consensos médicos atualizados (ACR, AIUM, CBR, ATLS, EAU, Fleischner, SBU, SBEM) sempre que embasar uma recomendação.
-- Nunca inventar dados clínicos não fornecidos; caso falte uma informação do exame ou histórico, sinalizar claramente ao médico.
+SEU PAPEL E RESTRIÇÃO À LITERATURA MÉDICA:
+- Restrinja suas respostas estritamente à literatura médica baseada em evidências e consensos consolidados de radiologia/ultrassonografia (ACR, AIUM, CBR, ATLS, EAU, ISUOG, ESSR, Fleischner, SBU, SBEM). Recuse educadamente assuntos fora do escopo médico e nunca especule sem respaldo científico; se não houver consenso ou faltar algum dado do exame, sinalize claramente.
+- Responda dúvidas clínicas durante o exame (critérios TI-RADS, BI-RADS USG, Bosniak, medidas anatômicas normais, diagnósticos diferenciais, condutas de urgência e contraindicações de contraste).
+- Quando uma imagem de ultrassonografia for enviada, descreva de forma objetiva o que é visível (estruturas, ecogenicidade, contornos, sombra/reforço, coleções, Doppler) e a impressão provável.
+- SEJA CONCISO E DIRETO: Mesmo no modo Raciocínio Clínico, responda de forma curta e prática (máximo ~120 a 180 palavras ou 3 a 5 tópicos objetivos), sem introduções longas ou prolixidade — só aprofunde se o médico pedir mais detalhes.${
+            isFast
+              ? "\n- MODO CONSULTA RÁPIDA: Mantenha 100% de consistência clínica com o laudo atual e com o raciocínio já apresentado na conversa (sem alterar diagnósticos ou condutas já alinhadas), entregando a mesma conclusão de forma direta em 2 a 3 tópicos curtíssimos (máx. ~80 a 100 palavras)."
+              : ""
+          }
+- Manter tom médico objetivo e colaborativo em português do Brasil.
 
 CONTEXTO CLÍNICO ATIVO DO PACIENTE:
 ${contextText}
 ${reportSummary ? `\nLAUDO ATUAL GERADO:\n${reportSummary}` : ""}`;
 
-      // Constrói o histórico multi-turno para o Gemini
-      const contents = messages.map((turn, idx) => {
+      // Constrói o histórico multi-turno recente para o Gemini (mantém latência baixa)
+      const recentMessages = messages.slice(-12);
+      const contents = recentMessages.map((turn, idx) => {
         const isLastUserTurn =
-          idx === messages.length - 1 && turn.role === "user";
+          idx === recentMessages.length - 1 && turn.role === "user";
         const parts: Array<
           | { text: string }
           | { inlineData: { mimeType: string; data: string } }
@@ -604,12 +639,13 @@ ${reportSummary ? `\nLAUDO ATUAL GERADO:\n${reportSummary}` : ""}`;
         fallbackModel: isFast ? PRIMARY_CLINICAL_MODEL : FALLBACK_FAST_MODEL,
         contents,
         config: isFast
-          ? { systemInstruction }
+          ? { systemInstruction, seed: 42 }
           : {
               systemInstruction,
-              thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
+              seed: 42,
+              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             },
-        fallbackConfig: { systemInstruction },
+        fallbackConfig: { systemInstruction, seed: 42 },
       });
 
       res.json({

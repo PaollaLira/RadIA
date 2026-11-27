@@ -45,7 +45,7 @@ export const PWAInstallButton: React.FC = () => {
 
         {showIOSGuide && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-xs"
             role="dialog"
             aria-modal="true"
             aria-label={t.pwa.iosTitle}

@@ -18,6 +18,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   const { lang, t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [capabilities, setCapabilities] = useState<CameraCapabilitiesState>({
     hasMultipleCameras: false,
@@ -103,25 +104,23 @@ export const CameraModal: React.FC<CameraModalProps> = ({
     setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
   };
 
-  const handleNativeFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setCapturedImage(dataUrl);
-      }
-    };
-    reader.readAsDataURL(file);
+    e.target.value = '';
+    try {
+      const compressed = await cameraService.compressImageFile(file);
+      setCapturedImage(compressed);
+    } catch (err) {
+      console.error('Image upload error:', err);
+    }
   };
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-between p-4 backdrop-blur-md select-none"
+      className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-between pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-md select-none"
       role="dialog"
       aria-modal="true"
       aria-label={t.camera.title}
@@ -214,26 +213,42 @@ export const CameraModal: React.FC<CameraModalProps> = ({
               <div className="absolute inset-0 bg-slate-950/95 p-6 flex flex-col items-center justify-center text-center text-slate-300 gap-4">
                 <AlertCircle className="w-10 h-10 text-amber-400" />
                 <p className="text-xs text-slate-400 max-w-sm">{errorMsg}</p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2.5 rounded-lg bg-teal-800 text-cyan-200 text-xs font-semibold flex items-center gap-2 hover:bg-teal-700"
-                >
-                  <Upload className="w-4 h-4" />
-                  {t.camera.nativeBtn}
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-4 py-2.5 rounded-lg bg-teal-800 text-cyan-200 text-xs font-semibold flex items-center gap-2 hover:bg-teal-700"
+                  >
+                    <Camera className="w-4 h-4" />
+                    {t.camera.nativeBtn}
+                  </button>
+                  <button
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="px-4 py-2.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold flex items-center gap-2 hover:bg-slate-700"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {t.camera.galleryBtn}
+                  </button>
+                </div>
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* Hidden native capture input */}
+      {/* Hidden native camera & gallery inputs */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         capture="environment"
-        onChange={handleNativeFileInput}
+        onChange={handleFileSelected}
+        className="hidden"
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelected}
         className="hidden"
       />
 
@@ -259,10 +274,10 @@ export const CameraModal: React.FC<CameraModalProps> = ({
         ) : (
           <div className="flex items-center justify-between w-full px-6">
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => galleryInputRef.current?.click()}
               className="p-3 rounded-full bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
-              title={t.camera.nativeBtn}
-              aria-label={t.camera.nativeBtn}
+              title={t.camera.galleryBtn}
+              aria-label={t.camera.galleryBtn}
             >
               <Upload className="w-5 h-5" />
             </button>

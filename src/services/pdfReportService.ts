@@ -72,6 +72,10 @@ function formatBirthDateForPdf(
     const [y, m, d] = birthDate.split('-').map(Number);
     return new Date(y, m - 1, d).toLocaleDateString(locale);
   }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(birthDate)) {
+    const [d, m, y] = birthDate.split('/').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(locale);
+  }
   return birthDate;
 }
 

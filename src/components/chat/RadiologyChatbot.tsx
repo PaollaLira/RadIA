@@ -16,6 +16,9 @@ import {
   Brain,
   AlertCircle,
   Eye,
+  Copy,
+  Check,
+  ListChecks,
 } from 'lucide-react';
 import { BrandLoader } from '../common/BrandLoader';
 
@@ -79,6 +82,8 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
   const [attachImage, setAttachImage] = useState<boolean>(!!imageDataUrl);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+  const [showQuickPrompts, setShowQuickPrompts] = useState<boolean>(false);
 
   const threadEndRef = useRef<HTMLDivElement>(null);
   const fileUploadRef = useRef<HTMLInputElement>(null);
@@ -125,7 +130,8 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
     setAttachImage(false);
   };
 
-  const handleSend = async (customPrompt?: string) => {
+  const handleSend = async (customPrompt?: string, overrideMode?: ChatModelMode) => {
+    const activeMode = overrideMode ?? modelMode;
     const shouldAttachImage = attachImage && !!chatImageDataUrl;
     const rawText = (customPrompt ?? input).trim();
     const effectiveText =
@@ -134,6 +140,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
     if (!effectiveText || isSending) return;
 
     setErrorMsg(null);
+    setShowQuickPrompts(false);
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}-u`,
@@ -160,7 +167,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
         report,
         imageDataUrl: shouldAttachImage ? chatImageDataUrl : undefined,
         attachImage: shouldAttachImage,
-        modelMode,
+        modelMode: activeMode,
         language: lang,
       });
 
@@ -199,16 +206,28 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
     }
   };
 
+  const handleCopyMessage = async (msgId: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMsgId(msgId);
+      setTimeout(() => {
+        setCopiedMsgId((prev) => (prev === msgId ? null : prev));
+      }, 2000);
+    } catch {
+      // ignore clipboard failures in restricted environments
+    }
+  };
+
   const examLabel = exam?.specialty ? t.specialties[exam.specialty] : 'USG';
 
   return (
     <aside
-      className="fixed inset-y-0 right-0 z-50 w-full sm:w-[440px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col"
+      className="fixed inset-0 sm:inset-y-0 sm:left-auto sm:right-0 z-50 w-full sm:w-[440px] h-dvh bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col"
       role="dialog"
       aria-label={t.chat.title}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex items-center justify-between gap-2">
+      <div className="pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-teal-800 dark:bg-teal-700 text-cyan-300 flex items-center justify-center shrink-0">
             <MessageSquare className="w-4 h-4" />
@@ -340,6 +359,51 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
                 <span>{msg.role === 'user' ? t.chat.you : 'UltrAI Med'}</span>
                 <span aria-hidden="true">·</span>
                 <span>{msg.timestamp}</span>
+                {msg.role === 'model' && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyMessage(msg.id, msg.text)}
+                      className="inline-flex items-center gap-1 text-slate-400 hover:text-teal-700 dark:hover:text-cyan-400 transition-colors py-0.5 px-1 rounded"
+                      title={t.chat.copyReply}
+                      aria-label={t.chat.copyReply}
+                    >
+                      {copiedMsgId === msg.id ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="font-sans text-[10px] text-emerald-600 dark:text-emerald-400">
+                            {t.chat.copiedReply}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span className="font-sans text-[10px]">{t.chat.copyReply}</span>
+                        </>
+                      )}
+                    </button>
+                    {msg.text.length > 220 && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <button
+                          type="button"
+                          disabled={isSending}
+                          onClick={() => {
+                            setModelMode('fast');
+                            handleSend(t.chat.quickSummaryPrompt, 'fast');
+                          }}
+                          className="inline-flex items-center gap-1 text-slate-400 hover:text-teal-700 dark:hover:text-cyan-400 transition-colors py-0.5 px-1 rounded disabled:opacity-50"
+                          title={t.chat.quickSummaryBtn}
+                          aria-label={t.chat.quickSummaryBtn}
+                        >
+                          <Zap className="w-3 h-3" />
+                          <span className="font-sans text-[10px]">{t.chat.quickSummaryBtn}</span>
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           ))
@@ -365,7 +429,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
+      <div className="pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pl-[calc(0.75rem+env(safe-area-inset-left))] pr-[calc(0.75rem+env(safe-area-inset-right))] border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
         <input
           ref={fileUploadRef}
           type="file"
@@ -416,7 +480,36 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
           </div>
         )}
 
-        <div className="flex items-center gap-1.5">
+        {messages.length > 0 && showQuickPrompts && (
+          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-1.5 max-h-44 overflow-y-auto">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                {t.chat.quickPromptsTitle}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowQuickPrompts(false)}
+                className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                aria-label={t.chat.close}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {t.chat.quickPrompts.map((prompt, idx) => (
+              <button
+                key={idx}
+                type="button"
+                disabled={isSending}
+                onClick={() => handleSend(prompt)}
+                className="w-full text-left p-2 rounded-lg text-[11px] bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-colors disabled:opacity-50"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={() => fileUploadRef.current?.click()}
@@ -426,6 +519,22 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
             <ImagePlus className="w-3.5 h-3.5 text-teal-700 dark:text-cyan-400" />
             <span>{t.chat.uploadImageBtn}</span>
           </button>
+
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowQuickPrompts((prev) => !prev)}
+              disabled={isSending}
+              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors inline-flex items-center gap-1.5 disabled:opacity-50 ${
+                showQuickPrompts
+                  ? 'bg-cyan-50 dark:bg-cyan-950/60 text-teal-900 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <ListChecks className="w-3.5 h-3.5 text-teal-700 dark:text-cyan-400" />
+              <span>{t.chat.quickPromptsBtn}</span>
+            </button>
+          )}
         </div>
 
         <div className="flex items-end gap-2">

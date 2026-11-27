@@ -70,9 +70,14 @@ class CameraService {
   }
 
   public captureSnapshot(videoElement: HTMLVideoElement): string {
+    const srcW = videoElement.videoWidth || 1280;
+    const srcH = videoElement.videoHeight || 720;
+    const maxDim = 1280;
+    const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+
     const canvas = document.createElement('canvas');
-    canvas.width = videoElement.videoWidth || 1280;
-    canvas.height = videoElement.videoHeight || 720;
+    canvas.width = Math.max(1, Math.round(srcW * scale));
+    canvas.height = Math.max(1, Math.round(srcH * scale));
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Não foi possível obter contexto 2D para captura');
@@ -85,7 +90,42 @@ class CameraService {
     }
 
     ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.92);
+    return canvas.toDataURL('image/jpeg', 0.85);
+  }
+
+  public async compressImageFile(
+    file: File,
+    maxDim = 1280,
+    quality = 0.85
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const rawDataUrl = event.target?.result as string;
+        if (!rawDataUrl) {
+          reject(new Error('Falha ao ler arquivo de imagem.'));
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(rawDataUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(rawDataUrl);
+        img.src = rawDataUrl;
+      };
+      reader.onerror = () => reject(new Error('Falha ao carregar imagem.'));
+      reader.readAsDataURL(file);
+    });
   }
 
   public stopCamera(): void {

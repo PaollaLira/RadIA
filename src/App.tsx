@@ -92,8 +92,18 @@ export default function App() {
     setActivePatientId(resolvedPatientId);
     setPatientName(rawPatient?.name || '');
     setPatientCpf(rawPatient?.cpf || '');
-    setPatientBirthDate(rawPatient?.birthDate || '');
-    setPatientAge(rawPatient?.age && rawPatient.age > 0 ? String(rawPatient.age) : '');
+    const storedBirthDate = rawPatient?.birthDate || '';
+    const displayBirthDate = /^\d{4}-\d{2}-\d{2}$/.test(storedBirthDate)
+      ? `${storedBirthDate.slice(8, 10)}/${storedBirthDate.slice(5, 7)}/${storedBirthDate.slice(0, 4)}`
+      : storedBirthDate;
+    setPatientBirthDate(displayBirthDate);
+    setPatientAge(
+      rawPatient?.age && rawPatient.age > 0
+        ? String(rawPatient.age)
+        : displayBirthDate.length === 10
+          ? '0'
+          : ''
+    );
     setPatientGender(rawPatient?.gender || 'F');
 
     setSpecialty(rawExam.specialty);
@@ -334,17 +344,40 @@ export default function App() {
     if (!nextBirthDate) {
       nextAgeValue = 0;
       setPatientAge('');
-    } else if (/^\d{4}-\d{2}-\d{2}$/.test(nextBirthDate)) {
-      const [y, m, d] = nextBirthDate.split('-').map(Number);
-      const today = new Date();
-      let age = today.getFullYear() - y;
-      const monthDiff = today.getMonth() + 1 - m;
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) {
-        age--;
+    } else {
+      let y = 0;
+      let m = 0;
+      let d = 0;
+      let hasDateParts = false;
+
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(nextBirthDate)) {
+        [d, m, y] = nextBirthDate.split('/').map(Number);
+        hasDateParts = true;
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(nextBirthDate)) {
+        [y, m, d] = nextBirthDate.split('-').map(Number);
+        hasDateParts = true;
       }
-      if (age >= 0 && age <= 120) {
-        nextAgeValue = age;
-        setPatientAge(String(age));
+
+      if (hasDateParts && m >= 1 && m <= 12 && d >= 1 && d <= 31 && y >= 1900) {
+        const parsedDate = new Date(y, m - 1, d);
+        const today = new Date();
+        const isValidCalendarDate =
+          parsedDate.getFullYear() === y &&
+          parsedDate.getMonth() === m - 1 &&
+          parsedDate.getDate() === d &&
+          parsedDate <= today;
+
+        if (isValidCalendarDate) {
+          let age = today.getFullYear() - y;
+          const monthDiff = today.getMonth() + 1 - m;
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) {
+            age--;
+          }
+          if (age >= 0 && age <= 120) {
+            nextAgeValue = age;
+            setPatientAge(String(age));
+          }
+        }
       }
     }
 
@@ -445,7 +478,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="min-h-dvh w-full max-w-full overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       {/* Top Navigation Bar */}
       <TopNavBar
         activeTab={activeTab}
@@ -465,7 +498,7 @@ export default function App() {
       />
 
       {/* Main View Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3.5 sm:p-6 pb-[calc(5rem+env(safe-area-inset-bottom))] pl-[max(0.875rem,env(safe-area-inset-left))] pr-[max(0.875rem,env(safe-area-inset-right))]">
         {activeTab === 'measurements' ? (
           <MeasurementsReferenceView />
         ) : (
@@ -514,6 +547,7 @@ export default function App() {
                   onChangeTextFinding={handleFindingTextChange}
                   hasCapturedImage={!!capturedImage}
                   onOpenLiveCamera={() => setIsCameraOpen(true)}
+                  onUploadImage={applyImageToActiveExam}
                   onAnalyze={handleAnalyzeAndGenerateReport}
                   isAnalyzing={isAnalyzing}
                   onOpenChat={() => setIsChatOpen(true)}
@@ -564,7 +598,7 @@ export default function App() {
       {activeTab === 'diagnostic' && !isChatOpen && (
         <button
           onClick={() => setIsChatOpen(true)}
-          className="no-print fixed bottom-5 right-5 z-40 px-4 py-3 rounded-full bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white shadow-xl flex items-center gap-2 text-xs font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          className="no-print fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-[calc(1rem+env(safe-area-inset-right))] sm:right-5 z-40 px-4 py-3 rounded-full bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white shadow-xl flex items-center gap-2 text-xs font-semibold transition-transform hover:scale-[1.02] active:scale-[0.98]"
           aria-label={t.chat.title}
         >
           <MessageSquare className="w-4 h-4 text-cyan-300" />

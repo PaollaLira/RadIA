@@ -78,6 +78,10 @@ export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
       const [y, m, d] = patient.birthDate.split('-').map(Number);
       return new Date(y, m - 1, d).toLocaleDateString(locale);
     }
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(patient.birthDate)) {
+      const [d, m, y] = patient.birthDate.split('/').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString(locale);
+    }
     return patient.birthDate;
   })();
 
