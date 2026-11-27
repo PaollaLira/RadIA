@@ -225,18 +225,6 @@ interface PatientContextPayload {
   name?: string;
   age?: number;
   gender?: string;
-  recordNumber?: string;
-  clinicalIndication?: string;
-  comorbidities?: string[];
-  allergies?: string[];
-  currentMedications?: string[];
-  renalFunction?: { creatinine: number; eGFR?: number; date: string };
-  priorExams?: Array<{
-    date: string;
-    modality: string;
-    region: string;
-    summary: string;
-  }>;
 }
 
 interface ExamContextPayload {
@@ -248,15 +236,6 @@ interface ExamContextPayload {
 const REPORT_RESPONSE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    urgencyLevel: {
-      type: Type.STRING,
-      description:
-        "Nível de gravidade e urgência clínica: exatamente um entre EMERGENCY, URGENT, PRIORITY ou ELECTIVE.",
-    },
-    urgencyRationale: {
-      type: Type.STRING,
-      description: "Justificativa clínica objetiva para a classificação de urgência.",
-    },
     technique: {
       type: Type.OBJECT,
       properties: {
@@ -276,20 +255,15 @@ const REPORT_RESPONSE_SCHEMA = {
     findings: {
       type: Type.ARRAY,
       description:
-        "Lista completa de achados anatômicos da região examinada, incluindo obrigatoriamente tanto as estruturas alteradas quanto todas as demais estruturas normais/sem alterações relevantes da região avaliada.",
+        "Lista objetiva de achados anatômicos da região examinada, incluindo estruturas alteradas e demais estruturas normais esperadas na região (1 frase curta e direta por estrutura quando normal).",
       items: {
         type: Type.OBJECT,
         properties: {
           region: { type: Type.STRING },
           description: { type: Type.STRING },
           measurements: { type: Type.STRING },
-          significance: {
-            type: Type.STRING,
-            description:
-              "Exatamente um entre: normal, benign, indeterminate, suspicious ou critical.",
-          },
         },
-        required: ["region", "description", "significance"],
+        required: ["region", "description"],
       },
     },
     diagnosticImpression: {
@@ -299,51 +273,42 @@ const REPORT_RESPONSE_SCHEMA = {
         differentialDiagnoses: {
           type: Type.ARRAY,
           items: { type: Type.STRING },
+          description:
+            "Lista vazia ([]) quando o exame for normal ou sem achados significativos.",
         },
         classificationScore: { type: Type.STRING },
         comparativeEvolution: { type: Type.STRING },
       },
       required: ["primaryDiagnosis", "differentialDiagnoses"],
     },
-    riskStratification: {
-      type: Type.OBJECT,
-      properties: {
-        clinicalFlags: {
-          type: Type.ARRAY,
-          items: { type: Type.STRING },
-        },
-        actionRecommendation: { type: Type.STRING },
-      },
-      required: ["clinicalFlags", "actionRecommendation"],
-    },
     medicalLiterature: {
       type: Type.ARRAY,
+      description:
+        "Máximo de 1 referência resumida quando exame normal, ou até 2 referências objetivas quando houver alterações.",
       items: {
         type: Type.OBJECT,
         properties: {
           guidelineOrStudy: { type: Type.STRING },
           organizationOrJournal: { type: Type.STRING },
           year: { type: Type.INTEGER },
-          evidenceLevel: { type: Type.STRING },
-          summaryOfEvidence: { type: Type.STRING },
+          summaryOfEvidence: {
+            type: Type.STRING,
+            description: "Resumo de 1 frase curta (máximo 18 palavras).",
+          },
         },
         required: [
           "guidelineOrStudy",
           "organizationOrJournal",
           "year",
-          "evidenceLevel",
           "summaryOfEvidence",
         ],
       },
     },
   },
   required: [
-    "urgencyLevel",
-    "urgencyRationale",
     "technique",
     "findings",
     "diagnosticImpression",
-    "riskStratification",
     "medicalLiterature",
   ],
 };
@@ -353,32 +318,10 @@ function buildPatientContextText(
   exam?: ExamContextPayload
 ): string {
   if (!patient) return "Sem dados do paciente informados.";
-  const priorText =
-    patient.priorExams && patient.priorExams.length > 0
-      ? patient.priorExams
-          .map(
-            (p) =>
-              `- [${p.date}] ${p.modality} (${p.region}): ${p.summary}`
-          )
-          .join("\n")
-      : "Nenhum exame prévio registrado.";
-
-  const renalText = patient.renalFunction
-    ? `Creatinina: ${patient.renalFunction.creatinine} mg/dL${
-        patient.renalFunction.eGFR
-          ? `, eGFR: ${patient.renalFunction.eGFR}`
-          : ""
-      } (${patient.renalFunction.date})`
-    : "Não informada";
-
   return [
-    `PACIENTE: ${patient.name || "Não identificado"} | Idade: ${patient.age ?? "N/I"} anos | Sexo: ${patient.gender || "N/I"} | Prontuário: ${patient.recordNumber || "N/I"}`,
-    `INDICAÇÃO CLÍNICA: ${patient.clinicalIndication || "Não informada"}`,
-    `COMORBIDADES: ${(patient.comorbidities || []).join(", ") || "Nenhuma relatada"}`,
-    `ALERGIAS: ${(patient.allergies || []).join(", ") || "Nega alergias"}`,
-    `MEDICAÇÕES EM USO: ${(patient.currentMedications || []).join(", ") || "Nenhuma"}`,
-    `FUNÇÃO RENAL: ${renalText}`,
-    `EXAMES ANTERIORES COMPARATIVOS:\n${priorText}`,
+    `PACIENTE: ${patient.name || "Não identificado"} | Idade: ${
+      patient.age && patient.age > 0 ? `${patient.age} anos` : "N/I"
+    } | Sexo: ${patient.gender || "N/I"}`,
     exam
       ? `EXAME ATUAL: Especialidade/Região USG = ${exam.specialty || "Geral"} | Transdutor = ${exam.transducer || "Convexo/Linear"} | Achados já anotados = ${exam.manualFindingText || "Nenhum"}`
       : "",
@@ -424,31 +367,31 @@ async function startServer() {
 
       const systemInstruction =
         lang === "en"
-          ? `You are UltrAI Med, a senior attending radiologist specialized in Diagnostic Ultrasound (USG) and emergency triage.
-Your goal is to generate a high-precision structured medical report strictly in English, following the EXACT same 5-section formal standard whether receiving an ultrasound image or a confirmed textual finding description.
+          ? `You are UltrAI Med, a senior attending radiologist specialized in Diagnostic Ultrasound (USG).
+Your goal is to generate a concise, objective, high-precision structured medical report strictly in English, following the EXACT same 4-section formal standard whether receiving an ultrasound image or a confirmed textual finding description.
 
 MANDATORY GUIDELINES:
-1. COMPLETE REGIONAL FINDINGS (NORMAL + ALTERED): In Section 2 ("findings"), DO NOT list only the altered/pathological structure. You MUST generate a complete anatomical inventory for the selected ultrasound specialty/region, describing BOTH the altered findings provided/observed AND all remaining unaltered/normal anatomical structures expected in that exam (marking unaltered structures with significance: "normal", e.g.: for Abdomen include liver, gallbladder, bile ducts, pancreas, spleen, kidneys, aorta/IVC; for Cervical/Thyroid include lobes, isthmus, salivary glands, cervical lymph nodes; for MSK include tendons, ligaments, joint recesses/bursae, muscle bellies, cortical bone surfaces; for Obstetric include gestational sac/fetal heart rate, biometry, placenta, amniotic fluid, cervix; for Soft Tissues/Axillae include skin, subcutaneous plane, lymph nodes/deeper planes).
-2. Base your recommendations, scoring (ACR TI-RADS, BI-RADS USG, Tokyo Guidelines, Bosniak, ATLS E-FAST, EAU), and management EXCLUSIVELY on updated peer-reviewed medical literature and recognized guidelines (ACR, AIUM, CBR, ATLS, EAU, WSES, ISUOG, ESSR). Cite year, society/journal, and evidence level.
-3. Always integrate the patient's full longitudinal history (prior comparative exams, renal function/eGFR, allergies, and comorbidities).
-4. Strictly classify clinical urgency as EMERGENCY, URGENT, PRIORITY, or ELECTIVE.`
+1. COMPLETE YET OBJECTIVE REGIONAL FINDINGS: In Section 2 ("findings"), list BOTH any altered findings AND the expected normal anatomical structures of that specialty/region (e.g., Abdomen: liver, gallbladder, bile ducts, pancreas, spleen, kidneys, aorta/IVC; Cervical/Thyroid: lobes, isthmus, salivary glands, lymph nodes; MSK: key tendons, ligaments, bursae/joint recesses, muscle bellies, cortical bone; Obstetric: vitality/FHR, biometry, placenta, amniotic fluid, cervix; Soft Tissues/Axillae: skin, subcutaneous tissue, muscle planes, lymph nodes).
+2. EXTRA BREVITY WHEN NO SIGNIFICANT FINDINGS ARE PRESENT: When the exam is normal or the input states "No significant findings", keep the entire report direct and telegraphic—use 1 short sentence per normal structure, state a direct normal conclusion in "primaryDiagnosis", leave "differentialDiagnoses" as an empty array [], omit "classificationScore", and omit "technicalLimitations" unless explicitly reported. Do NOT recommend clinical management or immediate conduct.
+3. SUMMARIZED REFERENCES: In Section 4 ("medicalLiterature"), provide ONLY 1 summarized reference when normal (or at most 2 when altered), citing recognized guidelines (ACR, AIUM, CBR, EAU, ISUOG, ESSR) with year and a single concise sentence (max ~18 words) in "summaryOfEvidence".
+4. Integrate relevant longitudinal patient history (prior exams, comorbidities) concisely when available.`
           : lang === "es"
-          ? `Eres UltrAI Med, un médico radiólogo especialista sénior en Ultrasonografía Diagnóstica (USG) y triaje de emergencias.
-Tu objetivo es generar un informe médico estructurado de alta precisión estrictamente en español, siguiendo EXACTAMENTE el mismo estándar formal de 5 secciones tanto al recibir una imagen ecográfica como al recibir una descripción textual confirmada.
+          ? `Eres UltrAI Med, un médico radiólogo especialista sénior en Ultrasonografía Diagnóstica (USG).
+Tu objetivo es generar un informe médico estructurado conciso, objetivo y de alta precisión estrictamente en español, siguiendo EXACTAMENTE el mismo estándar formal de 4 secciones tanto al recibir una imagen ecográfica como al recibir una descripción textual confirmada.
 
 DIRECTRICES OBLIGATORIAS:
-1. HALLAZGOS COMPLETOS DE LA REGIÓN (NORMALES + ALTERADOS): En la Sección 2 ("findings"), NO te limites únicamente a la estructura alterada. DEBES incluir un inventario anatómico completo de la especialidad/región evaluada, describiendo TANTO los hallazgos alterados descritos/observados COMO todas las demás estructuras anatómicas normales/sin alteraciones de esa región (con significance: "normal", por ejemplo: en Abdomen incluir hígado, vesícula, vías biliares, páncreas, bazo, riñones, aorta/VCI; en Cervical/Tiroides incluir lóbulos, istmo, glándulas salivales, cadenas ganglionares; en Musculoesquelético incluir tendones, ligamentos, bolsas sinoviales, recesos articulares, planos musculares, cortical ósea; en Obstétrico incluir saco/vitalidad/FCF, biometría, placenta, líquido amniótico, cérvix; en Partes Blandas/Axilas incluir piel, tejido celular subcutáneo, ganglios y plano muscular).
-2. Basa tus recomendaciones, escalas (ACR TI-RADS, BI-RADS USG, Criterios de Tokio, Bosniak, ATLS E-FAST, EAU, ISUOG, ESSR) y conducta EXCLUSIVAMENTE en literatura médica actualizada y guías reconocidas. Cita año, sociedad/revista y nivel de evidencia.
-3. Integra siempre la historia clínica completa del paciente (estudios previos comparativos, función renal/eGFR, alergias y comorbilidades).
-4. Clasifica rigurosamente la urgencia clínica en EMERGENCY, URGENT, PRIORITY o ELECTIVE.`
-          : `Você é o UltrAI Med, um médico radiologista especialista sênior em Ultrassonografia Diagnóstica (USG) e triagem de emergências.
-Seu objetivo é gerar um laudo médico estruturado de alta precisão em português do Brasil, seguindo EXATAMENTE o mesmo padrão formal de 5 seções tanto quando recebe uma imagem ecográfica quanto quando recebe apenas a descrição textual de um achado confirmado.
+1. HALLAZGOS REGIONALES COMPLETOS Y OBJETIVOS: En la Sección 2 ("findings"), describe TANTO los hallazgos alterados COMO las demás estructuras anatómicas normales esperadas de esa especialidad/región (p. ej., Abdomen: hígado, vesícula, vías biliares, páncreas, bazo, riñones, aorta/VCI; Cervical/Tiroides: lóbulos, istmo, glándulas salivales, ganglios; Musculoesquelético: tendones, ligamentos, bursas/recesos, planos musculares, cortical ósea; Obstétrico: vitalidad/FCF, biometría, placenta, líquido amniótico, cérvix; Partes Blandas/Axilas: piel, tejido subcutáneo, planos musculares, ganglios).
+2. MÁXIMA OBJETIVIDAD SIN HALLAZGOS SIGNIFICATIVOS: Cuando el estudio sea normal o indique "Sin hallazgos significativos", redacta un informe directo y telegráfico: 1 frase corta por estructura normal, conclusión directa de normalidad en "primaryDiagnosis", "differentialDiagnoses" vacío ([]), sin "classificationScore" y sin "technicalLimitations" salvo indicación expresa. NO incluyas conducta clínica inmediata.
+3. REFERENCIAS RESUMIDAS: En la Sección 4 ("medicalLiterature"), incluye SOLO 1 referencia resumida en estudios normales (o máximo 2 si hay alteraciones), citando guías reconocidas (ACR, AIUM, CBR, EAU, ISUOG, ESSR), año y una sola frase breve (máximo ~18 palabras) en "summaryOfEvidence".
+4. Integra antecedentes previos relevantes solo si existen y aportan valor diagnóstico.`
+          : `Você é o UltrAI Med, um médico radiologista especialista sênior em Ultrassonografia Diagnóstica (USG).
+Seu objetivo é gerar um laudo médico estruturado enxuto, objetivo e de alta precisão em português do Brasil, seguindo EXATAMENTE o mesmo padrão formal de 4 seções tanto quando recebe uma imagem ecográfica quanto quando recebe a descrição textual de um achado.
 
 DIRETRIZES OBRIGATÓRIAS:
-1. ACHADOS COMPLETOS DA REGIÃO (ESTRUTURAS NORMAIS + ALTERADAS): Na Seção 2 ("findings"), NÃO liste apenas o achado alterado informado. Você DEVE elaborar um inventário anatômico completo da especialidade/região selecionada, descrevendo TANTO os achados alterados informados/observados QUANTO todas as demais estruturas anatômicas normais/sem alterações daquela região (com significance: "normal" — ex.: em Abdome descrever Fígado, Vesícula Biliar, Vias Biliares, Pâncreas, Baço, Rins, Aorta/Retroperitônio; em Cervical descrever Tireoide, Glândulas Parótidas e Submandibulares, Cadeias Linfonodais Cervicais e Vasos; em Axilas/Partes Moles descrever Pele, Tecido Celular Subcutâneo, Planos Musculares e Linfonodos; em Músculo-Esquelético descrever todos os tendões principais do segmento/articulação, bainhas sinoviais, bursas, ligamentos, superfícies ósseas/cartilagem e ventres musculares; em Obstétrico descrever Saco Gestacional/Vitalidade/FCF, Biometria, Placenta, Líquido Amniótico e Colo Uterino, conforme o trimestre).
-2. Baseie suas recomendações, escores (ACR TI-RADS, BI-RADS USG, Critérios de Tóquio, Bosniak, ATLS E-FAST, EAU, ISUOG, ESSR) e condutas EXCLUSIVAMENTE em literatura médica atualizada e diretrizes internacionais/nacionais reconhecidas (ACR, AIUM, CBR, ATLS, EAU, WSES, SBEM). Cite ano, sociedade/periódico e nível de evidência.
-3. Integre sempre o histórico completo do paciente (exames anteriores comparativos, função renal/eGFR, alergias e comorbidades).
-4. Classifique com rigor a urgência clínica em EMERGENCY (risco imediato de morte), URGENT (conduta aguda nas próximas horas), PRIORITY (investigação rápida/biópsia em dias) ou ELECTIVE (rotina).`;
+1. ACHADOS REGIONAIS COMPLETOS E OBJETIVOS: Na Seção 2 ("findings"), inclua TANTO eventuais alterações informadas/observadas QUANTO as demais estruturas anatômicas normais esperadas para a especialidade/região (ex.: Abdome: Fígado, Vesícula Biliar, Vias Biliares, Pâncreas, Baço, Rins, Aorta/VCI; Cervical/Tireoide: lobos, istmo, glândulas salivares (parótidas e submandibulares), linfonodos cervicais; Músculo-Esquelético: tendões principais, ligamentos, bursas/recessos, ventres musculares e cortical óssea; Obstétrico: vitalidade/FCF, biometria, placenta, líquido amniótico e colo uterino; Axilas/Partes Moles: pele, subcutâneo, planos musculares e linfonodos).
+2. OBJETIVIDADE MÁXIMA QUANDO NÃO HOUVER ACHADOS SIGNIFICATIVOS: Quando o exame for normal ou o texto indicar "Sem achados significativos", seja telegráfico e direto: use apenas 1 frase curta por estrutura normal (sem prolixidade), conclua de forma objetiva em "primaryDiagnosis" (ex.: "Exame ultrassonográfico dentro dos limites da normalidade."), deixe "differentialDiagnoses" como array vazio [], omita "classificationScore" e omita "technicalLimitations" se não houver limitações. NÃO inclua seção ou texto de conduta clínica imediata.
+3. REFERÊNCIAS RESUMIDAS: Na Seção 4 ("medicalLiterature"), traga APENAS 1 referência resumida em exames normais (ou no máximo 2 quando houver alterações/escores como TI-RADS/BI-RADS), citando diretrizes reconhecidas (ACR, AIUM, CBR, EAU, ISUOG, ESSR), ano e uma única frase curta (máximo ~18 palavras) em "summaryOfEvidence".
+4. Integre exames anteriores comparativos ou comorbidades apenas quando relevantes ao laudo.`;
 
       const userPrompt =
         lang === "en"
@@ -463,7 +406,7 @@ ${contextText}
 FINDINGS / RADIOLOGIST REQUEST:
 ${findingDescription}
 
-Generate the complete 5-section structured report in JSON matching the specified schema. Include both altered findings and all normal/unaltered regional structures in "findings". All descriptive fields MUST be in English.`
+Generate the concise 4-section structured report in JSON matching the specified schema. Include both altered findings (if any) and normal regional structures in "findings". All descriptive fields MUST be in English.`
           : lang === "es"
           ? `MODO DE ENTRADA: ${
               inputMode === "CAMERA_IMAGE"
@@ -476,7 +419,7 @@ ${contextText}
 HALLAZGOS / SOLICITUD DEL MÉDICO:
 ${findingDescription}
 
-Genere el informe estructurado completo de 5 secciones en JSON según el esquema especificado. Incluya tanto los hallazgos alterados como todas las estructuras regionales normales/sin alteraciones en "findings". Todos los campos descriptivos DEBEN estar en español.`
+Genere el informe estructurado conciso de 4 secciones en JSON según el esquema especificado. Incluya tanto los hallazgos alterados (si los hay) como las estructuras regionales normales en "findings". Todos los campos descriptivos DEBEN estar en español.`
           : `MODO DE ENTRADA: ${
               inputMode === "CAMERA_IMAGE"
                 ? "Imagem de Ultrassonografia enviada pelo médico"
@@ -488,7 +431,7 @@ ${contextText}
 ACHADOS / SOLICITAÇÃO DO RADIOLOGISTA:
 ${findingDescription}
 
-Gere o laudo estruturado completo de 5 seções em JSON conforme o schema especificado, incluindo tanto os achados alterados quanto as demais estruturas normais/sem alterações da região examinada em "findings".`;
+Gere o laudo estruturado enxuto e objetivo de 4 seções em JSON conforme o schema especificado, incluindo eventuais achados alterados e as demais estruturas normais da região em "findings".`;
 
       const parts: Array<
         | { text: string }

@@ -17,7 +17,11 @@ export class ChatService {
   }): Promise<{ reply: string }> {
     const lang = params.language || 'pt';
     const reportSummary = params.report
-      ? `Diagnóstico Principal: ${params.report.diagnosticImpression.primaryDiagnosis} | Urgência: ${params.report.urgencyLevel} | Conduta: ${params.report.riskStratification.actionRecommendation}`
+      ? `Diagnóstico Principal: ${params.report.diagnosticImpression.primaryDiagnosis}${
+          params.report.diagnosticImpression.classificationScore
+            ? ` | Classificação: ${params.report.diagnosticImpression.classificationScore}`
+            : ''
+        }`
       : undefined;
 
     const response = await fetch('/api/chat', {

@@ -5,7 +5,6 @@ import { UltrasoundExam } from '../../types/ultrasound';
 import { StandardizedRadiologyReport } from '../../types/report';
 import { ChatService } from '../../services/chatService';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { localizePatient, localizeExam } from '../../i18n/demoLocalization';
 import {
   MessageSquare,
   Send,
@@ -72,8 +71,6 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
 }) => {
   const { lang, t } = useLanguage();
   const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
-  const localizedPatient = patient ? localizePatient(patient, lang) : undefined;
-  const localizedExam = exam ? localizeExam(exam, lang) : undefined;
 
   const [input, setInput] = useState('');
   const [modelMode, setModelMode] = useState<ChatModelMode>('reasoning');
@@ -158,8 +155,8 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
     try {
       const { reply } = await ChatService.sendMessage({
         messages: nextHistory,
-        patient: localizedPatient,
-        exam: localizedExam,
+        patient,
+        exam,
         report,
         imageDataUrl: shouldAttachImage ? chatImageDataUrl : undefined,
         attachImage: shouldAttachImage,
@@ -202,7 +199,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
     }
   };
 
-  const examLabel = localizedExam?.specialty ? t.specialties[localizedExam.specialty] : 'USG';
+  const examLabel = exam?.specialty ? t.specialties[exam.specialty] : 'USG';
 
   return (
     <aside
@@ -221,7 +218,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
               {t.chat.title}
             </h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-              {localizedPatient ? `${localizedPatient.name} · ${examLabel}` : t.chat.consultant}
+              {patient?.name ? `${patient.name} · ${examLabel}` : t.chat.consultant}
             </p>
           </div>
         </div>
@@ -289,7 +286,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
               </span>
               {t.chat.welcomeBodyPrefix}{' '}
               <strong className="text-slate-900 dark:text-slate-100">
-                {localizedPatient?.name || t.chat.activePatientFallback}
+                {patient?.name || t.chat.activePatientFallback}
               </strong>
               .
             </div>

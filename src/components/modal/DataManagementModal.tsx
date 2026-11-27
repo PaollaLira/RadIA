@@ -5,7 +5,6 @@ import { Patient } from '../../types/patient';
 import { UltrasoundExam } from '../../types/ultrasound';
 import { StandardizedRadiologyReport } from '../../types/report';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { localizePatient } from '../../i18n/demoLocalization';
 import {
   Database,
   FileDown,
@@ -48,12 +47,11 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
 
   if (!isOpen) return null;
 
-  const localizedActivePatient = activePatient ? localizePatient(activePatient, lang) : undefined;
   const allReports = storageService.getData().reports;
   const reportedCount = Object.keys(allReports).length;
 
   const handleExportActivePdf = async () => {
-    if (!localizedActivePatient || !activeReport) {
+    if (!activePatient || !activeReport) {
       setStatusMsg(t.dataModal.errNoReport);
       setIsSuccess(false);
       return;
@@ -61,7 +59,7 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
 
     await PdfReportService.exportReportToPdf({
       report: activeReport,
-      patient: localizedActivePatient,
+      patient: activePatient,
       physicianName: activeReport.radiologistName || t.report.defaultPhysician,
       physicianCRM:
         activeReport.crm ||
@@ -73,13 +71,13 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
       imageDataUrl: activeImageDataUrl || activeExam?.capturedImageUrl,
       lang,
     });
-    setStatusMsg(`${t.dataModal.okPdf} ${localizedActivePatient.name}.`);
+    setStatusMsg(`${t.dataModal.okPdf} ${activePatient.name}.`);
     setIsSuccess(true);
   };
 
   const handleDownloadJpeg = async () => {
     const imgSource = activeImageDataUrl || activeExam?.capturedImageUrl;
-    if (!imgSource || !localizedActivePatient) {
+    if (!imgSource || !activePatient) {
       setStatusMsg(t.dataModal.errNoImage);
       setIsSuccess(false);
       return;
@@ -87,11 +85,11 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
 
     const ok = await PdfReportService.downloadImageAsJpeg(
       imgSource,
-      localizedActivePatient.name,
+      activePatient.name,
       lang
     );
     if (ok) {
-      setStatusMsg(`${t.dataModal.okJpeg} ${localizedActivePatient.name}.`);
+      setStatusMsg(`${t.dataModal.okJpeg} ${activePatient.name}.`);
       setIsSuccess(true);
     } else {
       setStatusMsg(t.dataModal.errJpegConvert);
@@ -101,7 +99,7 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
 
   const handleExportShiftSummaryPdf = () => {
     PdfReportService.exportShiftSummaryPdf({
-      patients: patients.map((p) => localizePatient(p, lang)),
+      patients,
       exams,
       reports: allReports,
       lang,
@@ -191,7 +189,7 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
           {/* Export Actions: PDF & JPEG */}
           <div className="space-y-2 pt-1">
             <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400 block">
-              {t.dataModal.activePatient}: {localizedActivePatient?.name || t.dataModal.noneSelected}
+              {t.dataModal.activePatient}: {activePatient?.name || t.dataModal.noneSelected}
             </span>
 
             <button

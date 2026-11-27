@@ -31,7 +31,7 @@ export interface UltrasoundExam {
   id: string;
   patientId: string;
   specialty: UltrasoundSpecialty | '';
-  status: 'PENDING' | 'IN_PROGRESS' | 'REPORTED';
+  status: 'PENDING' | 'REPORTED';
   transducer: TransducerType | '';
   capturedImageUrl?: string;
   manualFindingText?: string;

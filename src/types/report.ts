@@ -1,5 +1,3 @@
-type UrgencyLevel = 'EMERGENCY' | 'URGENT' | 'PRIORITY' | 'ELECTIVE';
-
 interface ReportFinding {
   region: string;
   description: string;
@@ -10,17 +8,12 @@ interface MedicalCitation {
   guidelineOrStudy: string;
   organizationOrJournal: string;
   year: number;
-  evidenceLevel: string;
   summaryOfEvidence: string;
 }
 
 export interface StandardizedRadiologyReport {
   examId: string;
   createdAt: string;
-
-  // Metadados de triagem
-  urgencyLevel: UrgencyLevel;
-  urgencyRationale: string;
 
   // 1. TÉCNICA E PROTOCOLO DO EXAME
   technique: {
@@ -34,7 +27,7 @@ export interface StandardizedRadiologyReport {
   // 2. ACHADOS RADIOLÓGICOS DETALHADOS (estruturas normais + alteradas)
   findings: ReportFinding[];
 
-  // 3. IMPRESSÃO DIAGNÓSTICA & DIAGNÓSTICO DIFERENCIAL
+  // 3. IMPRESSÃO DIAGNÓSTICA
   diagnosticImpression: {
     primaryDiagnosis: string;
     differentialDiagnoses: string[];
@@ -42,13 +35,7 @@ export interface StandardizedRadiologyReport {
     comparativeEvolution?: string;
   };
 
-  // 4. ESTRATIFICAÇÃO DE RISCO & GRAVIDADE
-  riskStratification: {
-    clinicalFlags: string[];
-    actionRecommendation: string;
-  };
-
-  // 5. EMBASAMENTO EM LITERATURA MÉDICA & DIRETRIZES ATUALIZADAS
+  // 4. REFERÊNCIAS MÉDICAS RESUMIDAS
   medicalLiterature: MedicalCitation[];
 
   // Assinatura médica do radiologista

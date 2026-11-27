@@ -6,7 +6,7 @@ import { AppLanguage } from '../i18n/translations';
 class AiRadiologyEngine {
   /**
    * Processa a análise do exame de ultrassonografia via Gemini no backend (/api/analyze-exam)
-   * e retorna o laudo estruturado completo no padrão de 5 seções para imagem ou texto.
+   * e retorna o laudo estruturado completo no padrão de 4 seções para imagem ou texto.
    */
   public static async analyzeExam(
     exam: UltrasoundExam,
@@ -63,12 +63,9 @@ class AiRadiologyEngine {
     const report: StandardizedRadiologyReport = {
       examId: exam.id,
       createdAt: now,
-      urgencyLevel: r.urgencyLevel || 'PRIORITY',
-      urgencyRationale: r.urgencyRationale || '',
       technique: r.technique,
       findings: r.findings || [],
       diagnosticImpression: r.diagnosticImpression,
-      riskStratification: r.riskStratification,
       medicalLiterature: r.medicalLiterature || [],
     };
 

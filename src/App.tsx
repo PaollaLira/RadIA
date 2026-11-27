@@ -7,7 +7,6 @@ import { StandardizedRadiologyReport } from './types/report';
 import { ChatMessage } from './types/chat';
 
 import { useLanguage } from './i18n/LanguageContext';
-import { localizePatient, localizeExam } from './i18n/demoLocalization';
 
 import { TopNavBar } from './components/common/TopNavBar';
 import { FindingInputArea } from './components/forms/FindingInputArea';
@@ -48,11 +47,13 @@ export default function App() {
   // Estado da Estação de Laudo
   const [inputMode, setInputMode] = useState<'CAMERA_IMAGE' | 'TEXT_FINDING'>('TEXT_FINDING');
   const [patientName, setPatientName] = useState<string>('');
+  const [patientCpf, setPatientCpf] = useState<string>('');
+  const [patientBirthDate, setPatientBirthDate] = useState<string>('');
   const [patientAge, setPatientAge] = useState<string>('');
   const [patientGender, setPatientGender] = useState<'M' | 'F' | 'Outro'>('F');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [specialty, setSpecialty] = useState<UltrasoundSpecialty | ''>('ABDOMEN');
-  const [transducer, setTransducer] = useState<TransducerType | ''>('CONVEX');
+  const [specialty, setSpecialty] = useState<UltrasoundSpecialty | ''>('');
+  const [transducer, setTransducer] = useState<TransducerType | ''>('');
   const [findingText, setFindingText] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -62,24 +63,6 @@ export default function App() {
     refreshData();
     document.documentElement.classList.add('dark');
   }, []);
-
-  // Sincroniza achado de casos de demonstração quando usuário troca idioma
-  useEffect(() => {
-    if (!activeExamId) return;
-    const rawExam = storageService.getExamById(activeExamId);
-    if (!rawExam) return;
-    const ptDefault = rawExam.manualFindingText || '';
-    const enLocalized = localizeExam(rawExam, 'en').manualFindingText || '';
-    const esLocalized = localizeExam(rawExam, 'es').manualFindingText || '';
-    // Só substitui se o texto atual corresponder exatamente ao texto padrão em PT, EN ou ES (preserva edições customizadas)
-    if (
-      findingText === ptDefault ||
-      findingText === enLocalized ||
-      findingText === esLocalized
-    ) {
-      setFindingText(localizeExam(rawExam, lang).manualFindingText || '');
-    }
-  }, [lang, activeExamId]);
 
   const refreshData = () => {
     const data = storageService.getData();
@@ -101,19 +84,20 @@ export default function App() {
     const rawExam = storageService.getExamById(examId);
     if (!rawExam) return;
 
-    const localized = localizeExam(rawExam, lang);
     const resolvedPatientId = patientId || rawExam.patientId;
     const rawPatient = storageService.getPatientById(resolvedPatientId);
 
     setActiveExamId(examId);
     setActivePatientId(resolvedPatientId);
     setPatientName(rawPatient?.name || '');
+    setPatientCpf(rawPatient?.cpf || '');
+    setPatientBirthDate(rawPatient?.birthDate || '');
     setPatientAge(rawPatient?.age && rawPatient.age > 0 ? String(rawPatient.age) : '');
     setPatientGender(rawPatient?.gender || 'F');
 
     setSpecialty(rawExam.specialty);
     setTransducer(rawExam.transducer);
-    setFindingText(localized.manualFindingText || '');
+    setFindingText(rawExam.manualFindingText || '');
     setCapturedImage(rawExam.capturedImageUrl || null);
     setInputMode(rawExam.capturedImageUrl ? 'CAMERA_IMAGE' : 'TEXT_FINDING');
     setAnalysisError(null);
@@ -162,6 +146,8 @@ export default function App() {
     }
 
     const trimmedPatientName = patientName.trim();
+    const trimmedCpf = patientCpf.trim();
+    const trimmedBirthDate = patientBirthDate.trim();
     const parsedAge = Number(patientAge);
     const sanitizedAge =
       patientAge.trim() !== '' && Number.isFinite(parsedAge) && parsedAge > 0
@@ -169,6 +155,8 @@ export default function App() {
         : 0;
     const hasPatientChanges =
       trimmedPatientName !== rawPatient.name ||
+      trimmedCpf !== (rawPatient.cpf || '') ||
+      trimmedBirthDate !== (rawPatient.birthDate || '') ||
       sanitizedAge !== rawPatient.age ||
       patientGender !== rawPatient.gender;
 
@@ -176,6 +164,8 @@ export default function App() {
       ? {
           ...rawPatient,
           name: trimmedPatientName,
+          cpf: trimmedCpf,
+          birthDate: trimmedBirthDate,
           age: sanitizedAge,
           gender: patientGender,
         }
@@ -187,8 +177,6 @@ export default function App() {
         prev.map((p) => (p.id === patientForAnalysis.id ? patientForAnalysis : p))
       );
     }
-
-    const localizedPatientForAi = localizePatient(patientForAnalysis, lang);
 
     setIsAnalyzing(true);
     setAnalysisError(null);
@@ -203,7 +191,7 @@ export default function App() {
       };
       storageService.saveExam(updatedExam);
 
-      const report = await aiRadiologyEngine.analyzeExam(updatedExam, localizedPatientForAi, {
+      const report = await aiRadiologyEngine.analyzeExam(updatedExam, patientForAnalysis, {
         inputMode,
         imageDataUrl: capturedImage || undefined,
         customFindingText: findingText,
@@ -238,12 +226,8 @@ export default function App() {
       name: '',
       age: 0,
       gender: 'F',
-      recordNumber: '',
-      clinicalIndication: '',
-      priorExams: [],
-      comorbidities: [],
-      allergies: [],
-      currentMedications: [],
+      cpf: '',
+      birthDate: '',
     };
 
     const newExam: UltrasoundExam = {
@@ -264,6 +248,8 @@ export default function App() {
     setActivePatientId(newPatientId);
     setActiveExamId(newExamId);
     setPatientName('');
+    setPatientCpf('');
+    setPatientBirthDate('');
     setPatientAge('');
     setPatientGender('F');
     setSpecialty('');
@@ -326,6 +312,51 @@ export default function App() {
     );
   };
 
+  const handlePatientCpfChange = (nextCpf: string) => {
+    setPatientCpf(nextCpf);
+    const currentPat = patients.find((p) => p.id === activePatientId) || patients[0];
+    if (!currentPat) return;
+    const updatedPatient: Patient = {
+      ...currentPat,
+      cpf: nextCpf.trim(),
+    };
+    storageService.savePatient(updatedPatient);
+    setPatients((prev) =>
+      prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
+    );
+  };
+
+  const handlePatientBirthDateChange = (nextBirthDate: string) => {
+    setPatientBirthDate(nextBirthDate);
+
+    let computedAge: number | null = null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(nextBirthDate)) {
+      const [y, m, d] = nextBirthDate.split('-').map(Number);
+      const today = new Date();
+      let age = today.getFullYear() - y;
+      const monthDiff = today.getMonth() + 1 - m;
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) {
+        age--;
+      }
+      if (age >= 0 && age <= 120) {
+        computedAge = age;
+        setPatientAge(age > 0 ? String(age) : '');
+      }
+    }
+
+    const currentPat = patients.find((p) => p.id === activePatientId) || patients[0];
+    if (!currentPat) return;
+    const updatedPatient: Patient = {
+      ...currentPat,
+      birthDate: nextBirthDate,
+      ...(computedAge !== null ? { age: computedAge } : {}),
+    };
+    storageService.savePatient(updatedPatient);
+    setPatients((prev) =>
+      prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
+    );
+  };
+
   const handlePatientGenderChange = (nextGender: 'M' | 'F' | 'Outro') => {
     setPatientGender(nextGender);
     const currentPat = patients.find((p) => p.id === activePatientId) || patients[0];
@@ -366,15 +397,28 @@ export default function App() {
     setExams(storageService.getExams());
   };
 
+  const handleFindingTextChange = (nextText: string) => {
+    setFindingText(nextText);
+    const targetId = activeExamId || exams[0]?.id;
+    const currentEx = targetId ? storageService.getExamById(targetId) : undefined;
+    if (!currentEx) return;
+    const updatedExam: UltrasoundExam = {
+      ...currentEx,
+      manualFindingText: nextText,
+    };
+    storageService.saveExam(updatedExam);
+    setExams(storageService.getExams());
+  };
+
   const activePatient = patients.find((p) => p.id === activePatientId) || patients[0];
   const activeExam = exams.find((e) => e.id === activeExamId) || exams[0];
-  const localizedActivePatient = activePatient ? localizePatient(activePatient, lang) : undefined;
 
   const handleLogout = () => {
     authService.logout();
     setSession(null);
     setShowPaywallUpgrade(false);
     setIsChatOpen(false);
+    setActiveTab('diagnostic');
   };
 
   if (!session || showPaywallUpgrade) {
@@ -418,7 +462,7 @@ export default function App() {
         {activeTab === 'measurements' ? (
           <MeasurementsReferenceView />
         ) : (
-          localizedActivePatient &&
+          activePatient &&
           activeExam && (
             <div className="space-y-6">
               {/* Split Grid: Visualizador (quando houver imagem) / Formulário & Laudo */}
@@ -434,7 +478,7 @@ export default function App() {
                 <div className="lg:col-span-5 space-y-6">
                   <UltrasoundViewer
                     imageUrl={capturedImage}
-                    examTitle={`USG ${specialty ? t.specialties[specialty] : lang === 'pt' ? 'Geral' : 'General'} — ${localizedActivePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
+                    examTitle={`USG ${specialty ? t.specialties[specialty] : lang === 'pt' ? 'Geral' : 'General'} — ${activePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
                     onRetakeOrUpload={() => setIsCameraOpen(true)}
                   />
                 </div>
@@ -447,6 +491,10 @@ export default function App() {
                   onChangeInputMode={setInputMode}
                   patientName={patientName}
                   onChangePatientName={handlePatientNameChange}
+                  patientCpf={patientCpf}
+                  onChangePatientCpf={handlePatientCpfChange}
+                  patientBirthDate={patientBirthDate}
+                  onChangePatientBirthDate={handlePatientBirthDateChange}
                   patientAge={patientAge}
                   onChangePatientAge={handlePatientAgeChange}
                   patientGender={patientGender}
@@ -456,7 +504,7 @@ export default function App() {
                   transducer={transducer}
                   onChangeTransducer={handleTransducerChange}
                   textFinding={findingText}
-                  onChangeTextFinding={setFindingText}
+                  onChangeTextFinding={handleFindingTextChange}
                   hasCapturedImage={!!capturedImage}
                   onOpenLiveCamera={() => setIsCameraOpen(true)}
                   onAnalyze={handleAnalyzeAndGenerateReport}
@@ -480,7 +528,7 @@ export default function App() {
                 {activeReport ? (
                   <StructuredReportView
                     report={activeReport}
-                    patient={localizedActivePatient}
+                    patient={activePatient}
                     imageDataUrl={capturedImage}
                     onUpdateReport={(updated) => {
                       storageService.saveReport(updated);
@@ -521,7 +569,7 @@ export default function App() {
       <RadiologyChatbot
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
-        patient={localizedActivePatient}
+        patient={activePatient}
         exam={activeExam}
         report={activeReport}
         imageDataUrl={capturedImage}
@@ -544,7 +592,7 @@ export default function App() {
         onDataChanged={refreshData}
         patients={patients}
         exams={exams}
-        activePatient={localizedActivePatient}
+        activePatient={activePatient}
         activeExam={activeExam}
         activeReport={activeReport}
         activeImageDataUrl={capturedImage}

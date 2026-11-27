@@ -12,162 +12,35 @@ interface StorageData {
   activeExamId: string | null;
 }
 
-const STORAGE_KEY = 'radia_clinical_store_v1';
+const STORAGE_KEY = 'ultrai_med_clinical_store_v2';
 
-// Casos clínicos pré-configurados de ultrassonografia com histórico rico
-const INITIAL_PATIENTS: Patient[] = [
-  {
-    id: 'pat-001',
-    name: 'Roberto Carlos Silveira',
-    age: 58,
-    gender: 'M',
-    recordNumber: 'HC-2026-9081',
-    clinicalIndication: 'Dor súbita intensa em hipocôndrio direito irradiada para dorso há 12h, febre (38.4°C), vômitos e leucocitose (16.200/mm³).',
-    roomBed: 'Pronto-Socorro Adulto - Leito 04',
-    comorbidities: ['Diabetes Mellitus tipo 2', 'Hipertensão Arterial Sistêmica', 'Dislipidemia'],
-    allergies: ['Dipirona (broncoespasmo)'],
-    currentMedications: ['Metformina 850mg 2x/dia', 'Losartana 50mg/dia'],
-    renalFunction: {
-      creatinine: 1.1,
-      eGFR: 78,
-      date: '2026-11-10',
-    },
-    priorExams: [
-      {
-        date: '2024-08-15',
-        modality: 'USG',
-        region: 'Abdome Superior',
-        summary: 'Esteatose hepática moderada (grau II). Vesícula biliar contendo microlitíase móvel, paredes finas (2.1 mm), sem sinais de colecistite.',
-      },
-    ],
-  },
-  {
-    id: 'pat-002',
-    name: 'Helena Maria Vasconcelos',
-    age: 42,
+function createInitialState(): StorageData {
+  const initialPatient: Patient = {
+    id: 'pat-initial',
+    name: '',
+    age: 0,
     gender: 'F',
-    recordNumber: 'HC-2026-7412',
-    clinicalIndication: 'Nódulo palpável indolor em terço inferior do lobo tireoidiano direito, detectado em consulta ginecológica.',
-    roomBed: 'Ambulatório de Especialidades - Sala 02',
-    comorbidities: ['Hipotireoidismo subclínico'],
-    allergies: ['Sem alergias medicamentosas relatadas'],
-    currentMedications: ['Levotiroxina 50 mcg/dia em jejum'],
-    renalFunction: {
-      creatinine: 0.8,
-      eGFR: 95,
-      date: '2026-09-18',
-    },
-    priorExams: [
-      {
-        date: '2024-05-10',
-        modality: 'USG',
-        region: 'Tireoide e Cervical',
-        summary: 'Glândula tireoide de dimensões anatômicas. Presença de dois pequenos cistos coloides em lobo esquerdo (< 3 mm). Lobo direito homogêneo sem nódulos identificáveis.',
-      },
-    ],
-  },
-  {
-    id: 'pat-003',
-    name: 'Lucas Gabriel Mendes',
-    age: 26,
-    gender: 'M',
-    recordNumber: 'HC-2026-3190',
-    clinicalIndication: 'Politrauma por colisão moto x anteparo, dor abdominal difusa, taquicardia (124 bpm), sudorese fria, PA 85/50 mmHg.',
-    roomBed: 'Sala Vermelha / Choque - Leito 01',
-    comorbidities: ['Hígido previamente'],
-    allergies: ['Não informadas (paciente torporoso)'],
-    currentMedications: ['Nenhuma de uso contínuo'],
-    priorExams: [],
-  },
-  {
-    id: 'pat-004',
-    name: 'Carmem Lúcia Ferreira',
-    age: 54,
-    gender: 'F',
-    recordNumber: 'HC-2026-1184',
-    clinicalIndication: 'Rastreamento de mamas densas (composição mamográfica heterogênea tipo C). Assintomática.',
-    roomBed: 'Centro de Diagnóstico por Imagem',
-    comorbidities: ['Osteopenia'],
-    allergies: ['Iodo (reação urticariforme prévia)'],
-    currentMedications: ['Carbonato de Cálcio + Vitamina D'],
-    priorExams: [
-      {
-        date: '2025-10-12',
-        modality: 'MAMOGRAFIA',
-        region: 'Mamas Bilateral',
-        summary: 'Mamas densas de distribuição difusa. Sem calcificações pleomórficas suspeitas ou distorções arquiteturais. Sugerida complementação ultrassonográfica.',
-      },
-    ],
-  },
-  {
-    id: 'pat-005',
-    name: 'Valdir Antunes Pereira',
-    age: 67,
-    gender: 'M',
-    recordNumber: 'HC-2026-8854',
-    clinicalIndication: 'Cólica nefrética súbita à esquerda de forte intensidade, associada a hematúria macroscópica e náuseas incoercíveis.',
-    roomBed: 'Pronto Atendimento - Box 08',
-    comorbidities: ['Gota úrica', 'Dislipidemia', 'Hiperplasia Prostática Benigna (HPB)'],
-    allergies: ['Sulfa'],
-    currentMedications: ['Alopurinol 100mg/dia', 'Tansulosina 0.4mg/dia'],
-    renalFunction: {
-      creatinine: 1.4,
-      eGFR: 52,
-      date: '2026-11-10',
-    },
-    priorExams: [
-      {
-        date: '2023-11-02',
-        modality: 'USG',
-        region: 'Aparelho Urinário',
-        summary: 'Rins tópicos com limites conservados. Microlitíases não obstrutivas em cálice inferior direito (3 mm) e esquerdo (4 mm). Ausência de hidronefrose à época.',
-      },
-    ],
-  },
-];
+    cpf: '',
+    birthDate: '',
+  };
 
-const INITIAL_EXAMS: UltrasoundExam[] = [
-  {
-    id: 'exam-001',
-    patientId: 'pat-001',
-    specialty: 'ABDOMEN',
-    status: 'IN_PROGRESS',
-    transducer: 'CONVEX',
-    manualFindingText: 'Vesícula biliar distendida, cálculo impactado no infundíbulo medindo 19 mm com sombra acústica posterior. Parede espessada medindo 5.4 mm com halo hipoecogênico e líquido pericolecístico. Sinal de Murphy ultrassonográfico positivo.',
-  },
-  {
-    id: 'exam-002',
-    patientId: 'pat-002',
-    specialty: 'THYROID',
+  const initialExam: UltrasoundExam = {
+    id: 'exam-initial',
+    patientId: 'pat-initial',
+    specialty: '',
     status: 'PENDING',
-    transducer: 'LINEAR',
-    manualFindingText: 'Nódulo sólido marcadamente hipoecoico em terço médio do lobo direito da tireoide, medindo 15 x 11 x 13 mm. Relação mais alto que largo, margens microlobuladas e microcalcificações internas puntiformes.',
-  },
-  {
-    id: 'exam-003',
-    patientId: 'pat-003',
-    specialty: 'POCUS_FAST',
-    status: 'IN_PROGRESS',
-    transducer: 'SECTOR',
-    manualFindingText: 'E-FAST Trauma: Lâmina líquida anecoica franca em recesso hepatorrenal de Morrison (espessura 16 mm) e lâmina em recesso esplenorrenal. Janela pericárdica livre e deslizamento pleural preservado bilateralmente.',
-  },
-  {
-    id: 'exam-004',
-    patientId: 'pat-004',
-    specialty: 'BREAST',
-    status: 'REPORTED',
-    transducer: 'LINEAR',
-    manualFindingText: 'Nódulo anecoico oval, circunscrito, de paredes finas, reforço acústico posterior límpido, no quadrante superior externo da mama esquerda (posição 2h), medindo 8 x 5 mm. Sem vascularização ao Doppler.',
-  },
-  {
-    id: 'exam-005',
-    patientId: 'pat-005',
-    specialty: 'URINARY_KIDNEYS',
-    status: 'PENDING',
-    transducer: 'CONVEX',
-    manualFindingText: 'Moderada a importante ectasia pielocalicinal no rim esquerdo. Imagem hiperecogênica com 8 mm no terço distal do ureter esquerdo / junção ureterovesical, produzindo sombra acústica e artefato de cintilação.',
-  },
-];
+    transducer: '',
+    manualFindingText: '',
+  };
+
+  return {
+    patients: [initialPatient],
+    exams: [initialExam],
+    reports: {},
+    activePatientId: initialPatient.id,
+    activeExamId: initialExam.id,
+  };
+}
 
 class StorageService {
   private isBrowser(): boolean {
@@ -176,38 +49,20 @@ class StorageService {
 
   public getData(): StorageData {
     if (!this.isBrowser()) {
-      return {
-        patients: INITIAL_PATIENTS,
-        exams: INITIAL_EXAMS,
-        reports: {},
-        activePatientId: 'pat-001',
-        activeExamId: 'exam-001',
-      };
+      return createInitialState();
     }
 
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) {
-        const initialData: StorageData = {
-          patients: INITIAL_PATIENTS,
-          exams: INITIAL_EXAMS,
-          reports: {},
-          activePatientId: 'pat-001',
-          activeExamId: 'exam-001',
-        };
+        const initialData = createInitialState();
         this.saveData(initialData);
         return initialData;
       }
       return JSON.parse(stored) as StorageData;
     } catch (err) {
       console.warn('Erro ao carregar dados do localStorage, redefinindo:', err);
-      return {
-        patients: INITIAL_PATIENTS,
-        exams: INITIAL_EXAMS,
-        reports: {},
-        activePatientId: 'pat-001',
-        activeExamId: 'exam-001',
-      };
+      return createInitialState();
     }
   }
 
@@ -303,14 +158,7 @@ class StorageService {
   }
 
   public resetToDefaults(): void {
-    const initialData: StorageData = {
-      patients: INITIAL_PATIENTS,
-      exams: INITIAL_EXAMS,
-      reports: {},
-      activePatientId: 'pat-001',
-      activeExamId: 'exam-001',
-    };
-    this.saveData(initialData);
+    this.saveData(createInitialState());
   }
 }
 

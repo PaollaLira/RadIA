@@ -10,6 +10,10 @@ interface FindingInputAreaProps {
   onChangeInputMode: (mode: 'CAMERA_IMAGE' | 'TEXT_FINDING') => void;
   patientName: string;
   onChangePatientName: (name: string) => void;
+  patientCpf: string;
+  onChangePatientCpf: (cpf: string) => void;
+  patientBirthDate: string;
+  onChangePatientBirthDate: (birthDate: string) => void;
   patientAge: string;
   onChangePatientAge: (age: string) => void;
   patientGender: 'M' | 'F' | 'Outro';
@@ -334,6 +338,10 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
   onChangeInputMode,
   patientName,
   onChangePatientName,
+  patientCpf,
+  onChangePatientCpf,
+  patientBirthDate,
+  onChangePatientBirthDate,
   patientAge,
   onChangePatientAge,
   patientGender,
@@ -354,6 +362,15 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
 
   const handleApplyPresetPhrase = (phrase: string) => {
     onChangeTextFinding(phrase);
+  };
+
+  const handleCpfInput = (raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 11);
+    const formatted = digits
+      .replace(/^(\d{3})(\d)/, '$1.$2')
+      .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/\.(\d{3})(\d)/, '.$1-$2');
+    onChangePatientCpf(formatted);
   };
 
   const quickPhrasesForSpecialty = specialty ? QUICK_PHRASES[lang][specialty] : undefined;
@@ -399,9 +416,9 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
         </div>
       </div>
 
-      {/* Patient Name, Age & Sex Inputs for Report */}
+      {/* Patient Name, CPF, Birth Date, Age & Sex Inputs for Report */}
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-3.5">
-        <div className="sm:col-span-7">
+        <div className="sm:col-span-6">
           <label
             htmlFor="finding-patient-name"
             className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
@@ -421,7 +438,7 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
           </div>
         </div>
 
-        <div className="sm:col-span-2">
+        <div className="sm:col-span-3">
           <label
             htmlFor="finding-patient-age"
             className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
@@ -457,6 +474,41 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
             <option value="M">{t.report.male}</option>
             <option value="Outro">{t.report.other}</option>
           </select>
+        </div>
+
+        <div className="sm:col-span-6">
+          <label
+            htmlFor="finding-patient-cpf"
+            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+          >
+            {t.findingInput.cpfLabel}
+          </label>
+          <input
+            id="finding-patient-cpf"
+            type="text"
+            inputMode="numeric"
+            maxLength={14}
+            value={patientCpf}
+            onChange={(e) => handleCpfInput(e.target.value)}
+            placeholder={t.findingInput.cpfPlaceholder}
+            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono"
+          />
+        </div>
+
+        <div className="sm:col-span-6">
+          <label
+            htmlFor="finding-patient-birth-date"
+            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+          >
+            {t.findingInput.birthDateLabel}
+          </label>
+          <input
+            id="finding-patient-birth-date"
+            type="date"
+            value={patientBirthDate}
+            onChange={(e) => onChangePatientBirthDate(e.target.value)}
+            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+          />
         </div>
       </div>
 
