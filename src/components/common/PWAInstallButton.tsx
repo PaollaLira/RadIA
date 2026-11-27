@@ -17,7 +17,7 @@ export const PWAInstallButton: React.FC = () => {
       <button
         type="button"
         onClick={() => void install()}
-        className="px-2 sm:px-2.5 py-1.5 rounded-md text-xs font-semibold bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 text-teal-900 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
+        className="px-2 sm:px-2.5 py-1.5 min-h-[36px] sm:min-h-0 rounded-md text-xs font-semibold bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 text-teal-900 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
         title={t.pwa.installTitle}
         aria-label={t.pwa.installTitle}
       >
@@ -34,7 +34,7 @@ export const PWAInstallButton: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowIOSGuide(true)}
-          className="px-2 sm:px-2.5 py-1.5 rounded-md text-xs font-semibold bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 text-teal-900 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
+          className="px-2 sm:px-2.5 py-1.5 min-h-[36px] sm:min-h-0 rounded-md text-xs font-semibold bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:hover:bg-cyan-900/60 text-teal-900 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
           title={t.pwa.installTitle}
           aria-label={t.pwa.installTitle}
         >
@@ -45,7 +45,7 @@ export const PWAInstallButton: React.FC = () => {
 
         {showIOSGuide && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-xs"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-xs"
             role="dialog"
             aria-modal="true"
             aria-label={t.pwa.iosTitle}
@@ -58,7 +58,7 @@ export const PWAInstallButton: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowIOSGuide(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                   aria-label={t.pwa.iosClose}
                 >
                   <X className="w-4 h-4" />

@@ -1,17 +1,36 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { ZoomIn, ZoomOut, Sun, Contrast, RotateCcw, Ruler, Eye, RefreshCw } from 'lucide-react';
+import { ExamMeasurement } from '../../types/ultrasound';
+import {
+  ZoomIn,
+  ZoomOut,
+  Sun,
+  Contrast,
+  RotateCcw,
+  Ruler,
+  Eye,
+  RefreshCw,
+  Plus,
+  X,
+  Pin,
+} from 'lucide-react';
 
 interface UltrasoundViewerProps {
   imageUrl: string;
   onRetakeOrUpload?: () => void;
   examTitle?: string;
+  measurements?: ExamMeasurement[];
+  onMeasurementsChange?: (measurements: ExamMeasurement[]) => void;
+  onActiveCaliperChange?: (caliperValue: string | null) => void;
 }
 
 export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
   imageUrl,
   onRetakeOrUpload,
   examTitle,
+  measurements = [],
+  onMeasurementsChange,
+  onActiveCaliperChange,
 }) => {
   const { t } = useLanguage();
   const [brightness, setBrightness] = useState<number>(100);
@@ -22,6 +41,8 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
 
   const [caliperStart, setCaliperStart] = useState<{ x: number; y: number } | null>(null);
   const [caliperEnd, setCaliperEnd] = useState<{ x: number; y: number } | null>(null);
+  const [manualLabel, setManualLabel] = useState<string>('');
+  const [manualValue, setManualValue] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleResetFilters = () => {
@@ -33,6 +54,11 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
     setCaliperEnd(null);
     setIsCaliperActive(false);
   };
+
+  useEffect(() => {
+    setCaliperStart(null);
+    setCaliperEnd(null);
+  }, [imageUrl]);
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isCaliperActive || !containerRef.current) return;
@@ -56,6 +82,46 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
     return (pixelDist / 8).toFixed(1);
   })();
 
+  useEffect(() => {
+    onActiveCaliperChange?.(
+      calculatedDistanceMm ? `${calculatedDistanceMm} mm` : null
+    );
+  }, [calculatedDistanceMm, onActiveCaliperChange]);
+
+  const handlePinActiveCaliper = () => {
+    if (!calculatedDistanceMm || !onMeasurementsChange) return;
+    const nextItem: ExamMeasurement = {
+      id: `meas-${Date.now()}`,
+      label: manualLabel.trim() || undefined,
+      value: `${calculatedDistanceMm} mm`,
+      source: 'caliper',
+    };
+    onMeasurementsChange([...measurements, nextItem]);
+    setManualLabel('');
+    setCaliperStart(null);
+    setCaliperEnd(null);
+  };
+
+  const handleAddManualMeasurement = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedVal = manualValue.trim();
+    if (!trimmedVal || !onMeasurementsChange) return;
+    const nextItem: ExamMeasurement = {
+      id: `meas-${Date.now()}`,
+      label: manualLabel.trim() || undefined,
+      value: trimmedVal,
+      source: 'manual',
+    };
+    onMeasurementsChange([...measurements, nextItem]);
+    setManualLabel('');
+    setManualValue('');
+  };
+
+  const handleRemoveMeasurement = (id: string) => {
+    if (!onMeasurementsChange) return;
+    onMeasurementsChange(measurements.filter((m) => m.id !== id));
+  };
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col">
       {/* Top Toolbar */}
@@ -70,6 +136,7 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
 
         <div className="flex items-center gap-1 sm:gap-2">
           <button
+            type="button"
             onClick={() => setIsInverted((prev) => !prev)}
             className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
               isInverted
@@ -81,6 +148,7 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => setIsCaliperActive((prev) => !prev)}
             className={`px-2 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1 ${
               isCaliperActive
@@ -93,6 +161,7 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => setZoom((prev) => Math.min(prev + 25, 250))}
             className="p-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
             aria-label="Zoom +"
@@ -101,6 +170,7 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => setZoom((prev) => Math.max(prev - 25, 100))}
             className="p-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
             aria-label="Zoom -"
@@ -109,6 +179,7 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={handleResetFilters}
             className="p-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
             aria-label="Reset"
@@ -118,6 +189,7 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
 
           {onRetakeOrUpload && (
             <button
+              type="button"
               onClick={onRetakeOrUpload}
               className="px-2 py-1 rounded text-[11px] font-medium bg-teal-800 hover:bg-teal-700 text-cyan-200 transition-colors flex items-center gap-1 ml-1"
             >
@@ -132,8 +204,8 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
       <div
         ref={containerRef}
         onClick={handleContainerClick}
-        className={`relative w-full aspect-4/3 sm:aspect-16/10 bg-black flex items-center justify-center overflow-hidden cursor-${
-          isCaliperActive ? 'crosshair' : 'default'
+        className={`relative w-full aspect-4/3 sm:aspect-16/10 bg-black flex items-center justify-center overflow-hidden ${
+          isCaliperActive ? 'cursor-crosshair touch-none' : 'cursor-default'
         }`}
       >
         <img
@@ -256,6 +328,100 @@ export const UltrasoundViewer: React.FC<UltrasoundViewerProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Measurements Panel synced directly to Report Generation */}
+      {onMeasurementsChange && (
+        <div className="px-3.5 py-3 bg-slate-950 border-t border-slate-800 space-y-2.5 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+              <Ruler className="w-3.5 h-3.5" />
+              <span>{t.viewer.measurementsTitle}</span>
+            </span>
+            <span className="text-[11px] text-slate-400">
+              {t.viewer.caliperAutoHint}
+            </span>
+          </div>
+
+          {(calculatedDistanceMm || measurements.length > 0) && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {calculatedDistanceMm && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-200 text-[11px] font-medium">
+                  <Ruler className="w-3 h-3 text-amber-400 shrink-0" />
+                  <span>
+                    Caliper: <strong className="font-mono">{calculatedDistanceMm} mm</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handlePinActiveCaliper}
+                    className="ml-1 px-1.5 py-0.5 rounded bg-amber-400/20 hover:bg-amber-400/35 text-amber-200 text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                    title={t.viewer.pinCaliper}
+                  >
+                    <Pin className="w-2.5 h-2.5" />
+                    <span>{t.viewer.pinCaliper}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCaliperStart(null);
+                      setCaliperEnd(null);
+                    }}
+                    className="text-amber-300/70 hover:text-amber-100 ml-0.5"
+                    aria-label="Clear caliper"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+
+              {measurements.map((m) => (
+                <div
+                  key={m.id}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-900/50 border border-teal-700/60 text-cyan-100 text-[11px] font-medium"
+                >
+                  <span>
+                    {m.label ? `${m.label}: ` : ''}
+                    <strong className="font-mono">{m.value}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveMeasurement(m.id)}
+                    className="text-cyan-300/70 hover:text-white"
+                    aria-label="Remove measurement"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleAddManualMeasurement} className="grid grid-cols-12 gap-1.5">
+            <input
+              type="text"
+              value={manualLabel}
+              onChange={(e) => setManualLabel(e.target.value)}
+              placeholder={t.viewer.labelPlaceholder}
+              className="col-span-5 min-w-0 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            />
+            <input
+              type="text"
+              value={manualValue}
+              onChange={(e) => setManualValue(e.target.value)}
+              placeholder={t.viewer.valuePlaceholder}
+              className="col-span-4 min-w-0 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            />
+            <button
+              type="submit"
+              disabled={!manualValue.trim()}
+              className="col-span-3 px-2 py-1.5 rounded-lg bg-teal-800 hover:bg-teal-700 disabled:opacity-40 text-white text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{t.viewer.addMeasureBtn}</span>
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 };
+

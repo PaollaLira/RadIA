@@ -13,6 +13,7 @@ import {
   Edit3,
   Save,
   CheckCircle2,
+  Plus,
 } from 'lucide-react';
 
 interface StructuredReportViewProps {
@@ -20,6 +21,8 @@ interface StructuredReportViewProps {
   patient: Patient;
   imageDataUrl?: string | null;
   onUpdateReport?: (updated: StandardizedRadiologyReport) => void;
+  justGenerated?: boolean;
+  onNewExam?: () => void;
 }
 
 export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
@@ -27,6 +30,8 @@ export const StructuredReportView: React.FC<StructuredReportViewProps> = ({
   patient,
   imageDataUrl,
   onUpdateReport,
+  justGenerated = false,
+  onNewExam,
 }) => {
   const { lang, t } = useLanguage();
   const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR';
@@ -216,7 +221,41 @@ Laudo emitido com suporte do UltrAI Med (Diretrizes Internacionais de Ultrassono
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+    <div
+      className={`bg-white dark:bg-slate-900 border rounded-xl overflow-hidden shadow-sm transition-all ${
+        justGenerated
+          ? 'border-emerald-500/80 ring-2 ring-emerald-500/30'
+          : 'border-slate-200 dark:border-slate-800'
+      }`}
+    >
+      {justGenerated && (
+        <div className="no-print flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-2.5 bg-emerald-50 dark:bg-emerald-950/60 border-b border-emerald-200 dark:border-emerald-800/70 text-xs">
+          <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-semibold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>
+              {t.report.justGeneratedBanner} ·{' '}
+              <span className="font-mono">
+                {new Date(currentReport.createdAt).toLocaleTimeString(locale, {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
+              </span>
+            </span>
+          </div>
+          {onNewExam && (
+            <button
+              type="button"
+              onClick={onNewExam}
+              className="px-2.5 py-1 rounded-md bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-semibold flex items-center gap-1 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t.report.startAnotherReport}</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Top Action Bar */}
       <div className="no-print flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2">
@@ -277,6 +316,17 @@ Laudo emitido com suporte do UltrAI Med (Diretrizes Internacionais de Ultrassono
             )}
             <span>{pdfExported ? t.report.pdfExported : t.report.exportPdf}</span>
           </button>
+
+          {onNewExam && (
+            <button
+              type="button"
+              onClick={onNewExam}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 transition-colors flex items-center gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t.report.startAnotherReport}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -294,9 +344,14 @@ Laudo emitido com suporte do UltrAI Med (Diretrizes Internacionais de Ultrassono
               </h1>
             </div>
 
-            <div className="flex flex-col items-end gap-1.5">
-              <span className="text-[11px] text-slate-400 font-mono tabular-nums">
-                {new Date(currentReport.createdAt).toLocaleDateString(locale)}
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                {new Date(currentReport.createdAt).toLocaleDateString(locale)} ·{' '}
+                {new Date(currentReport.createdAt).toLocaleTimeString(locale, {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
               </span>
             </div>
           </div>

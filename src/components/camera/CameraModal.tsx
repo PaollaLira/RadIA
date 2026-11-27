@@ -120,7 +120,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-between pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-md select-none"
+      className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-between pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-md select-none"
       role="dialog"
       aria-modal="true"
       aria-label={t.camera.title}

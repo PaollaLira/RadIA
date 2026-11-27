@@ -124,7 +124,7 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-xs"
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-label={t.dataModal.title}
@@ -143,7 +143,7 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
               setStatusMsg(null);
               onClose();
             }}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             aria-label={t.dataModal.close}
           >
             <X className="w-5 h-5" />

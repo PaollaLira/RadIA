@@ -55,6 +55,11 @@ export const TRANSLATIONS = {
       awaitingTitle: 'Aguardando Processamento do Exame',
       awaitingDesc:
         'Carregue uma imagem do dispositivo, fotografe com a câmera ou descreva os achados acima e clique em "Gerar Laudo Estruturado Padronizado".',
+      generatingNewTitle: 'Gerando Novo Laudo Estruturado...',
+      generatingReplaceDesc:
+        'A IA está processando os novos dados e substituirá o laudo abaixo assim que concluir.',
+      generatingInitialDesc:
+        'Analisando achados, medições e diretrizes médicas para estruturar o laudo.',
       analysisErrorTitle: 'Falha na análise clínica',
       invalidSelectionError: 'Selecione um paciente e exame válidos para gerar o laudo.',
       genericError: 'Ocorreu um erro ao processar o laudo com o Gemini. Tente novamente.',
@@ -98,6 +103,7 @@ export const TRANSLATIONS = {
         'Exemplo: Vesícula distendida com cálculo de 19 mm impactado no colo, espessura parietal de 5 mm e sinal de Murphy positivo (demais estruturas normais serão incluídas automaticamente)...',
       processing: 'Processando com UltrAI Med e Diretrizes Médicas...',
       generateBtn: 'Gerar Laudo Estruturado Padronizado',
+      regenerateBtn: 'Gerar Novo Laudo (Atualizar)',
     },
     viewer: {
       defaultTitle: 'Exame Ecográfico',
@@ -110,6 +116,12 @@ export const TRANSLATIONS = {
       caliperResult: 'Distância estimada',
       brightness: 'Brilho',
       contrast: 'Contraste',
+      measurementsTitle: 'Medições para o Laudo',
+      pinCaliper: 'Fixar medição',
+      caliperAutoHint: 'Será enviada automaticamente para o laudo',
+      labelPlaceholder: 'Estrutura (ex: Cálculo)',
+      valuePlaceholder: 'Medida (ex: 19 mm)',
+      addMeasureBtn: 'Adicionar',
     },
     report: {
       headerTitle: 'Laudo Estruturado UltrAI Med',
@@ -147,6 +159,9 @@ export const TRANSLATIONS = {
       footerBrand: 'Emitido pelo UltrAI Med Copiloto de Ultrassom',
       footerSub: 'Apoio à decisão clínica baseado em evidências',
       defaultPhysician: 'Dr(a). Médico(a) Radiologista',
+      justGeneratedBanner: 'Novo laudo gerado com sucesso',
+      generatedAtPrefix: 'Gerado às',
+      startAnotherReport: 'Novo Laudo',
     },
     chat: {
       title: 'UltrAI Med · Copiloto IA',
@@ -284,6 +299,11 @@ export const TRANSLATIONS = {
       awaitingTitle: 'Awaiting Exam Processing',
       awaitingDesc:
         'Upload an image from your device, take a camera photo, or enter the findings above and click "Generate Standardized Structured Report".',
+      generatingNewTitle: 'Generating New Structured Report...',
+      generatingReplaceDesc:
+        'AI is processing your updated inputs and will replace the report below once finished.',
+      generatingInitialDesc:
+        'Analyzing findings, measurements, and medical guidelines to structure the report.',
       analysisErrorTitle: 'Clinical analysis failed',
       invalidSelectionError: 'Please select a valid patient and exam to generate the report.',
       genericError: 'An error occurred while generating the report with Gemini. Please try again.',
@@ -327,6 +347,7 @@ export const TRANSLATIONS = {
         'Example: Distended gallbladder with an impacted 19 mm neck calculus, 5.4 mm wall thickening, and positive sonographic Murphy sign (unaltered regional organs will be included automatically)...',
       processing: 'Analyzing with UltrAI Med & Medical Guidelines...',
       generateBtn: 'Generate Standardized Structured Report',
+      regenerateBtn: 'Generate New Report (Update)',
     },
     viewer: {
       defaultTitle: 'Ultrasound Exam',
@@ -339,6 +360,12 @@ export const TRANSLATIONS = {
       caliperResult: 'Estimated distance',
       brightness: 'Brightness',
       contrast: 'Contrast',
+      measurementsTitle: 'Measurements for Report',
+      pinCaliper: 'Pin measurement',
+      caliperAutoHint: 'Automatically included in report',
+      labelPlaceholder: 'Structure (e.g. Stone)',
+      valuePlaceholder: 'Value (e.g. 19 mm)',
+      addMeasureBtn: 'Add',
     },
     report: {
       headerTitle: 'UltrAI Med Structured Report',
@@ -376,6 +403,9 @@ export const TRANSLATIONS = {
       footerBrand: 'Issued via UltrAI Med Ultrasound Copilot',
       footerSub: 'Evidence-based clinical decision support',
       defaultPhysician: 'Dr. Attending Radiologist',
+      justGeneratedBanner: 'New report generated successfully',
+      generatedAtPrefix: 'Generated at',
+      startAnotherReport: 'New Report',
     },
     chat: {
       title: 'UltrAI Med · AI Copilot',
@@ -513,6 +543,11 @@ export const TRANSLATIONS = {
       awaitingTitle: 'Esperando Procesamiento del Estudio',
       awaitingDesc:
         'Suba una imagen del dispositivo, tome una foto con la cámara o describa los hallazgos arriba y haga clic en "Generar Informe Estructurado Estandarizado".',
+      generatingNewTitle: 'Generando Nuevo Informe Estructurado...',
+      generatingReplaceDesc:
+        'La IA está procesando los nuevos datos y reemplazará el informe debajo al finalizar.',
+      generatingInitialDesc:
+        'Analizando hallazgos, mediciones y guías médicas para estructurar el informe.',
       analysisErrorTitle: 'Error en el análisis clínico',
       invalidSelectionError: 'Seleccione un paciente y estudio válidos para generar el informe.',
       genericError: 'Ocurrió un error al procesar el informe con Gemini. Inténtelo de nuevo.',
@@ -556,6 +591,7 @@ export const TRANSLATIONS = {
         'Ejemplo: Vesícula distendida con cálculo de 19 mm enclavado en el cuello, pared de 5,4 mm y signo de Murphy ecográfico positivo (los demás órganos normales se incluirán automáticamente)...',
       processing: 'Procesando con UltrAI Med y Guías Médicas...',
       generateBtn: 'Generar Informe Estructurado Estandarizado',
+      regenerateBtn: 'Generar Nuevo Informe (Actualizar)',
     },
     viewer: {
       defaultTitle: 'Estudio Ecográfico',
@@ -568,6 +604,12 @@ export const TRANSLATIONS = {
       caliperResult: 'Distancia estimada',
       brightness: 'Brillo',
       contrast: 'Contraste',
+      measurementsTitle: 'Mediciones para el Informe',
+      pinCaliper: 'Fijar medición',
+      caliperAutoHint: 'Se incluirá automáticamente en el informe',
+      labelPlaceholder: 'Estructura (ej: Cálculo)',
+      valuePlaceholder: 'Medida (ej: 19 mm)',
+      addMeasureBtn: 'Agregar',
     },
     report: {
       headerTitle: 'Informe Estructurado UltrAI Med',
@@ -605,6 +647,9 @@ export const TRANSLATIONS = {
       footerBrand: 'Emitido por UltrAI Med Copiloto de Ultrasonido',
       footerSub: 'Apoyo a la decisión clínica basado en evidencia',
       defaultPhysician: 'Dr(a). Médico(a) Radiólogo(a)',
+      justGeneratedBanner: 'Nuevo informe generado con éxito',
+      generatedAtPrefix: 'Generado a las',
+      startAnotherReport: 'Nuevo Informe',
     },
     chat: {
       title: 'UltrAI Med · Copiloto IA',

@@ -27,6 +27,13 @@ export type UltrasoundSpecialty =
 
 export type TransducerType = 'CONVEX' | 'LINEAR' | 'SECTOR' | 'ENDOCAVITARY';
 
+export interface ExamMeasurement {
+  id: string;
+  label?: string;
+  value: string;
+  source: 'caliper' | 'manual';
+}
+
 export interface UltrasoundExam {
   id: string;
   patientId: string;
@@ -35,4 +42,5 @@ export interface UltrasoundExam {
   transducer: TransducerType | '';
   capturedImageUrl?: string;
   manualFindingText?: string;
+  viewerMeasurements?: ExamMeasurement[];
 }

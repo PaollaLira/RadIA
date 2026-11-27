@@ -30,6 +30,8 @@ interface FindingInputAreaProps {
   onUploadImage: (imageDataUrl: string) => void;
   onAnalyze: () => void;
   isAnalyzing: boolean;
+  hasExistingReport?: boolean;
+  viewerMeasurementsCount?: number;
   onOpenChat?: () => void;
 }
 
@@ -359,6 +361,8 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
   onUploadImage,
   onAnalyze,
   isAnalyzing,
+  hasExistingReport = false,
+  viewerMeasurementsCount = 0,
   onOpenChat,
 }) => {
   const { lang, t } = useLanguage();
@@ -737,7 +741,22 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
               <span>{t.findingInput.processing}</span>
             </>
           ) : (
-            <span>{t.findingInput.generateBtn}</span>
+            <span>
+              {hasExistingReport
+                ? t.findingInput.regenerateBtn
+                : t.findingInput.generateBtn}
+              {viewerMeasurementsCount > 0
+                ? ` (${viewerMeasurementsCount} ${
+                    viewerMeasurementsCount === 1
+                      ? lang === 'en'
+                        ? 'meas.'
+                        : 'med.'
+                      : lang === 'en'
+                        ? 'meas.'
+                        : 'meds.'
+                  })`
+                : ''}
+            </span>
           )}
         </button>
 

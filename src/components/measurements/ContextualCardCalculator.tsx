@@ -457,10 +457,14 @@ export const ContextualCardCalculator: React.FC<ContextualCardCalculatorProps> =
         ? ` · ${tr('Resíduo pós-miccional', 'Post-void residual', 'Residuo posmiccional')} ${fmt(vol2)} mL (${fmt(postVoidPct ?? 0, 0)}%)`
         : ''
     }`;
+  } else if (isSpleen && vol1 !== null && splenicIndex !== null) {
+    copySummary = `${organTitle}: ${tr('Índice Esplênico', 'Splenic Index', 'Índice Esplénico')} ${fmt(splenicIndex, 0)} · ${tr('Volume', 'Volume', 'Volumen')} ${fmt(vol1)} ${volUnit}${
+      weightGrams !== null ? ` (~${fmt(weightGrams)} g)` : ''
+    }`;
   } else if (vol1 !== null) {
     copySummary = `${organTitle}: ${fmt(vol1)} ${volUnit}${
       weightGrams !== null ? ` (~${fmt(weightGrams)} g)` : ''
-    }${splenicIndex !== null ? ` · ${tr('Índice esplênico', 'Splenic index', 'Índice esplénico')}: ${fmt(splenicIndex, 0)}` : ''}`;
+    }`;
   }
 
   return (
@@ -484,11 +488,17 @@ export const ContextualCardCalculator: React.FC<ContextualCardCalculatorProps> =
                   'Prostate Volume & Weight Calculator',
                   'Calculadora de Volumen y Peso Prostático'
                 )
-              : tr(
-                  'Calculadora de Volume Elipsoide & Peso',
-                  'Ellipsoid Volume & Weight Calculator',
-                  'Calculadora de Volumen Elipsoide y Peso'
-                ),
+              : isSpleen
+                ? tr(
+                    'Calculadora de Índice Esplênico & Volume',
+                    'Splenic Index & Volume Calculator',
+                    'Calculadora de Índice Esplénico y Volumen'
+                  )
+                : tr(
+                    'Calculadora de Volume Elipsoide & Peso',
+                    'Ellipsoid Volume & Weight Calculator',
+                    'Calculadora de Volumen Elipsoide y Peso'
+                  ),
         hasAny
       )}
 
@@ -504,40 +514,52 @@ export const ContextualCardCalculator: React.FC<ContextualCardCalculatorProps> =
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
-              {tr('Comp.', 'Length', 'Long.')} ({unit})
+              {isSpleen ? tr('Comp. (L)', 'Length (L)', 'Long. (L)') : tr('Comp.', 'Length', 'Long.')} ({unit})
             </label>
             <input
               type="text"
               inputMode="decimal"
               value={len1}
               onChange={(e) => setLen1(e.target.value)}
-              placeholder={primaryAxisPlaceholder('4,5', '45')}
+              placeholder={
+                isSpleen
+                  ? primaryAxisPlaceholder('10,5', '105')
+                  : primaryAxisPlaceholder('4,5', '45')
+              }
               className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
             />
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
-              AP ({unit})
+              {isSpleen ? tr('Espessura (AP)', 'Thickness (AP)', 'Espesor (AP)') : 'AP'} ({unit})
             </label>
             <input
               type="text"
               inputMode="decimal"
               value={ap1}
               onChange={(e) => setAp1(e.target.value)}
-              placeholder={primaryAxisPlaceholder('1,8', '18')}
+              placeholder={
+                isSpleen
+                  ? primaryAxisPlaceholder('4,2', '42')
+                  : primaryAxisPlaceholder('1,8', '18')
+              }
               className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
             />
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
-              {tr('Transv.', 'Width', 'Transv.')} ({unit})
+              {isSpleen ? tr('Largura (T)', 'Width (W)', 'Ancho (T)') : tr('Transv.', 'Width', 'Transv.')} ({unit})
             </label>
             <input
               type="text"
               inputMode="decimal"
               value={tr1}
               onChange={(e) => setTr1(e.target.value)}
-              placeholder={primaryAxisPlaceholder('1,6', '16')}
+              placeholder={
+                isSpleen
+                  ? primaryAxisPlaceholder('7,0', '70')
+                  : primaryAxisPlaceholder('1,6', '16')
+              }
               className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
             />
           </div>
@@ -619,6 +641,27 @@ export const ContextualCardCalculator: React.FC<ContextualCardCalculatorProps> =
                     </p>
                   )}
                 </>
+              ) : isSpleen && splenicIndex !== null ? (
+                <>
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    {tr('Índice Esplênico:', 'Splenic Index:', 'Índice Esplénico:')}{' '}
+                    <span className="text-teal-700 dark:text-cyan-300">
+                      {fmt(splenicIndex, 0)}
+                    </span>
+                    <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400 ml-1.5">
+                      (C × AP × T)
+                    </span>
+                  </p>
+                  <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {tr('Volume elipsoide:', 'Ellipsoid volume:', 'Volumen elipsoide:')}{' '}
+                    {fmt(primaryDisplayVol)} {volUnit}
+                    {weightGrams !== null && (
+                      <span className="text-teal-700 dark:text-cyan-400 font-semibold">
+                        {' '}· {tr('Peso est.', 'Est. weight', 'Peso est.')} ~{fmt(weightGrams)} g
+                      </span>
+                    )}
+                  </p>
+                </>
               ) : (
                 <>
                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -629,21 +672,6 @@ export const ContextualCardCalculator: React.FC<ContextualCardCalculatorProps> =
                       </span>
                     )}
                   </p>
-                  {splenicIndex !== null && (
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                      {tr('Índice Esplênico:', 'Splenic Index:', 'Índice Esplénico:')}{' '}
-                      <strong>{fmt(splenicIndex, 0)}</strong>{' '}
-                      <span
-                        className={
-                          splenicIndex < 480
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-rose-600 dark:text-rose-400'
-                        }
-                      >
-                        ({splenicIndex < 480 ? tr('normal < 480', 'normal < 480', 'normal < 480') : tr('aumentado ≥ 480', 'elevated ≥ 480', 'aumentado ≥ 480')})
-                      </span>
-                    </p>
-                  )}
                   {isProstate && primaryDisplayVol > 30 && (
                     <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
                       {primaryDisplayVol <= 50
@@ -667,17 +695,27 @@ export const ContextualCardCalculator: React.FC<ContextualCardCalculatorProps> =
             </button>
           </div>
 
-          {isBladder && vol2 !== null
-            ? renderRangeStatus(vol2, 0, 50, 'mL')
-            : renderRangeStatus(primaryDisplayVol, volMin, volMax, volUnit)}
+          {isSpleen && splenicIndex !== null
+            ? contextLabel
+              ? renderRangeStatus(splenicIndex, 0, 480, tr('(corte adulto)', '(adult cutoff)', '(corte adulto)'))
+              : renderRangeStatus(splenicIndex, 120, 480, '')
+            : isBladder && vol2 !== null
+              ? renderRangeStatus(vol2, 0, 50, 'mL')
+              : renderRangeStatus(primaryDisplayVol, volMin, volMax, volUnit)}
         </div>
       ) : (
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-          {tr(
-            `Informe os 3 eixos em ${unit} para calcular volume (${volUnit})${density ? ' e peso estimado (g)' : ''}.`,
-            `Enter all 3 axes in ${unit} to calculate volume (${volUnit})${density ? ' & estimated weight (g)' : ''}.`,
-            `Ingrese los 3 ejes en ${unit} para calcular volumen (${volUnit})${density ? ' y peso estimado (g)' : ''}.`
-          )}
+          {isSpleen
+            ? tr(
+                `Informe os 3 eixos em ${unit} para calcular o Índice Esplênico (C × AP × T · normal adulto: 120–480) e o volume (${volUnit}).`,
+                `Enter all 3 axes in ${unit} to calculate Splenic Index (L × AP × W · normal adult: 120–480) and volume (${volUnit}).`,
+                `Ingrese los 3 ejes en ${unit} para calcular el Índice Esplénico (L × AP × T · normal adulto: 120–480) y volumen (${volUnit}).`
+              )
+            : tr(
+                `Informe os 3 eixos em ${unit} para calcular volume (${volUnit})${density ? ' e peso estimado (g)' : ''}.`,
+                `Enter all 3 axes in ${unit} to calculate volume (${volUnit})${density ? ' & estimated weight (g)' : ''}.`,
+                `Ingrese los 3 ejes en ${unit} para calcular volumen (${volUnit})${density ? ' y peso estimado (g)' : ''}.`
+              )}
         </p>
       )}
     </div>

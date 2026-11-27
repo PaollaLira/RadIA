@@ -152,9 +152,13 @@ export const MeasurementsReferenceView: React.FC = () => {
         ? isCalcOpen
           ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
           : tr('Calcular peso fetal (Hadlock)', 'Calculate fetal weight (Hadlock)', 'Calcular peso fetal (Hadlock)')
-        : isCalcOpen
-          ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
-          : tr('Calcular volume / peso', 'Calculate volume / weight', 'Calcular volumen / peso');
+        : item.calculatorType === 'spleen'
+          ? isCalcOpen
+            ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
+            : tr('Calcular índice esplênico & volume', 'Calculate splenic index & volume', 'Calcular índice esplénico y volumen')
+          : isCalcOpen
+            ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
+            : tr('Calcular volume / peso', 'Calculate volume / weight', 'Calcular volumen / peso');
 
     return (
       <div
@@ -483,7 +487,12 @@ export const MeasurementsReferenceView: React.FC = () => {
                   <button
                     key={band.id}
                     type="button"
-                    onClick={() => setSelectedAgeBand(band.id)}
+                    onClick={() => {
+                      setSelectedAgeBand(band.id);
+                      if (selectedPedOrgan === 'ped-baco') {
+                        setActiveCalculatorId(`ped-baco-${band.id}`);
+                      }
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                       selectedAgeBand === band.id
                         ? 'bg-teal-800 dark:bg-teal-700 text-white border-teal-800 dark:border-teal-600'
@@ -516,7 +525,12 @@ export const MeasurementsReferenceView: React.FC = () => {
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => setSelectedPedOrgan(t.id)}
+                    onClick={() => {
+                      setSelectedPedOrgan(t.id);
+                      if (t.id === 'ped-baco') {
+                        setActiveCalculatorId(`ped-baco-${selectedAgeBand}`);
+                      }
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                       selectedPedOrgan === t.id
                         ? 'bg-cyan-700 text-white border-cyan-700'
@@ -670,7 +684,9 @@ export const MeasurementsReferenceView: React.FC = () => {
                           <span>
                             {activeCalculatorId === checkerKey
                               ? tr('Ocultar calculadora', 'Hide calculator', 'Ocultar calculadora')
-                              : tr('Calcular volume / peso', 'Calculate volume / weight', 'Calcular volumen / peso')}
+                              : table.calculatorType === 'spleen'
+                                ? tr('Calcular índice esplênico & volume', 'Calculate splenic index & volume', 'Calcular índice esplénico y volumen')
+                                : tr('Calcular volume / peso', 'Calculate volume / weight', 'Calcular volumen / peso')}
                           </span>
                         </button>
                       )}
@@ -764,7 +780,12 @@ export const MeasurementsReferenceView: React.FC = () => {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setSelectedAdultCat(cat)}
+                onClick={() => {
+                  setSelectedAdultCat(cat);
+                  if (cat === 'Baço' || cat === 'Spleen' || cat === 'Bazo') {
+                    setActiveCalculatorId('adu-baco');
+                  }
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                   selectedAdultCat === cat
                     ? 'bg-teal-800 dark:bg-teal-700 text-white border-teal-800 dark:border-teal-600'

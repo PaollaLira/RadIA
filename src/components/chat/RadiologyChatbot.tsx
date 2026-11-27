@@ -227,7 +227,7 @@ export const RadiologyChatbot: React.FC<RadiologyChatbotProps> = ({
       aria-label={t.chat.title}
     >
       {/* Header */}
-      <div className="pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex items-center justify-between gap-2">
+      <div className="pt-[calc(1.25rem+env(safe-area-inset-top))] sm:pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-teal-800 dark:bg-teal-700 text-cyan-300 flex items-center justify-center shrink-0">
             <MessageSquare className="w-4 h-4" />

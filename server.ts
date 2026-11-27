@@ -227,10 +227,17 @@ interface PatientContextPayload {
   gender?: string;
 }
 
+interface ExamMeasurementPayload {
+  label?: string;
+  value: string;
+  source?: string;
+}
+
 interface ExamContextPayload {
   specialty?: string;
   transducer?: string;
   manualFindingText?: string;
+  viewerMeasurements?: ExamMeasurementPayload[];
 }
 
 const REPORT_RESPONSE_SCHEMA = {
@@ -313,17 +320,35 @@ const REPORT_RESPONSE_SCHEMA = {
   ],
 };
 
+function formatViewerMeasurements(
+  measurements?: ExamMeasurementPayload[]
+): string {
+  if (!measurements || measurements.length === 0) return "";
+  return measurements
+    .filter((m) => m && typeof m.value === "string" && m.value.trim() !== "")
+    .map(
+      (m, idx) =>
+        `${idx + 1}. ${m.label?.trim() ? `${m.label.trim()}: ` : ""}${m.value.trim()}${
+          m.source === "caliper" ? " (caliper)" : ""
+        }`
+    )
+    .join(" | ");
+}
+
 function buildPatientContextText(
   patient?: PatientContextPayload,
   exam?: ExamContextPayload
 ): string {
   if (!patient) return "Sem dados do paciente informados.";
+  const measText = formatViewerMeasurements(exam?.viewerMeasurements);
   return [
     `PACIENTE: ${patient.name || "Não identificado"} | Idade: ${
       patient.age && patient.age > 0 ? `${patient.age} anos` : "N/I"
     } | Sexo: ${patient.gender || "N/I"}`,
     exam
-      ? `EXAME ATUAL: Especialidade/Região USG = ${exam.specialty || "Geral"} | Transdutor = ${exam.transducer || "Convexo/Linear"} | Achados já anotados = ${exam.manualFindingText || "Nenhum"}`
+      ? `EXAME ATUAL: Especialidade/Região USG = ${exam.specialty || "Geral"} | Transdutor = ${exam.transducer || "Convexo/Linear"} | Achados já anotados = ${exam.manualFindingText || "Nenhum"}${
+          measText ? ` | MEDIÇÕES NA IMAGEM = ${measText}` : ""
+        }`
       : "",
   ]
     .filter(Boolean)
@@ -395,12 +420,24 @@ DIRETRIZES OBRIGATÓRIAS:
 3. REFERÊNCIAS CONCISAS: Na Seção 4 ("medicalLiterature"), traga APENAS 1 referência concisa em exames normais (ou no máximo 2 quando houver alterações/escores como TI-RADS/BI-RADS), citando diretrizes reconhecidas (ACR, AIUM, CBR, EAU, ISUOG, ESSR), ano e uma única frase curta (máximo ~18 palavras) em "summaryOfEvidence".
 4. SEPARAÇÃO ENTRE MAMAS E AXILAS: O exame de Mamas (BREAST) e o exame de Axilas (AXILLAE) são feitos separadamente. No laudo de exame mamário, NUNCA inclua avaliação das axilas ou linfonodos axilares em "protocolName", "findings" ou "primaryDiagnosis".`;
 
+      const viewerMeasurementsText = formatViewerMeasurements(
+        exam?.viewerMeasurements
+      );
+
       const breastSeparationNote = isBreastExam
         ? lang === "en"
           ? "\nIMPORTANT: This is strictly a Breast ultrasound exam. Do NOT include axillae or axillary lymph nodes."
           : lang === "es"
           ? "\nIMPORTANTE: Este es exclusivamente un estudio de Mamas. NO incluya axilas ni ganglios axilares."
           : "\nIMPORTANTE: Este exame é exclusivamente de Mamas. NÃO inclua avaliação de axilas nem linfonodos axilares."
+        : "";
+
+      const measurementsMandatoryNote = viewerMeasurementsText
+        ? lang === "en"
+          ? `\nMANDATORY IMAGE MEASUREMENTS ENTERED BY PHYSICIAN: ${viewerMeasurementsText}\nYou MUST incorporate every single measurement above into the corresponding anatomical entry in Section 2 ("findings[].measurements" and "findings[].description") and reflect clinically relevant dimensions in Section 3 ("diagnosticImpression") without altering or omitting the physician's numeric values.`
+          : lang === "es"
+          ? `\nMEDICIONES OBLIGATORIAS REGISTRADAS EN LA IMAGEN POR EL MÉDICO: ${viewerMeasurementsText}\nDEBE incorporar todas estas mediciones en la estructura correspondiente de la Sección 2 ("findings[].measurements" y "findings[].description") y reflejar las dimensiones relevantes en la Sección 3 ("diagnosticImpression") sin omitir ni alterar los valores numéricos.`
+          : `\nMEDIÇÕES OBRIGATÓRIAS REGISTRADAS NA IMAGEM PELO MÉDICO: ${viewerMeasurementsText}\nInclua OBRIGATORIAMENTE todas as medições acima na estrutura anatômica correspondente da Seção 2 ("findings[].measurements" e "findings[].description") e cite as dimensões clinicamente relevantes na Seção 3 ("diagnosticImpression"), sem omitir nem alterar os valores numéricos informados.`
         : "";
 
       const userPrompt =
@@ -414,7 +451,7 @@ DIRETRIZES OBRIGATÓRIAS:
 ${contextText}
 
 FINDINGS / RADIOLOGIST REQUEST:
-${findingDescription}${breastSeparationNote}
+${findingDescription}${breastSeparationNote}${measurementsMandatoryNote}
 
 Generate the concise 4-section structured report in JSON matching the specified schema. Include both altered findings (if any) and normal regional structures in "findings". All descriptive fields MUST be in English.`
           : lang === "es"
@@ -427,7 +464,7 @@ Generate the concise 4-section structured report in JSON matching the specified 
 ${contextText}
 
 HALLAZGOS / SOLICITUD DEL MÉDICO:
-${findingDescription}${breastSeparationNote}
+${findingDescription}${breastSeparationNote}${measurementsMandatoryNote}
 
 Genere el informe estructurado conciso de 4 secciones en JSON según el esquema especificado. Incluya tanto los hallazgos alterados (si los hay) como las estructuras regionales normales en "findings". Todos los campos descriptivos DEBEN estar en español.`
           : `MODO DE ENTRADA: ${
@@ -439,7 +476,7 @@ Genere el informe estructurado conciso de 4 secciones en JSON según el esquema 
 ${contextText}
 
 ACHADOS / SOLICITAÇÃO DO RADIOLOGISTA:
-${findingDescription}${breastSeparationNote}
+${findingDescription}${breastSeparationNote}${measurementsMandatoryNote}
 
 Gere o laudo estruturado enxuto e objetivo de 4 seções em JSON conforme o schema especificado, incluindo eventuais achados alterados e as demais estruturas normais da região em "findings".`;
 

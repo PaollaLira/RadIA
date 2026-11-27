@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { storageService } from './services/storageService';
 import { aiRadiologyEngine } from './services/aiRadiologyEngine';
 import { Patient } from './types/patient';
-import { UltrasoundExam, UltrasoundSpecialty, TransducerType } from './types/ultrasound';
+import { UltrasoundExam, UltrasoundSpecialty, TransducerType, ExamMeasurement } from './types/ultrasound';
 import { StandardizedRadiologyReport } from './types/report';
 import { ChatMessage } from './types/chat';
 
@@ -20,6 +20,7 @@ import { AuthAndPaywallScreen } from './components/auth/AuthAndPaywallScreen';
 import { authService } from './services/authService';
 import { AuthSession } from './types/auth';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
+import { BrandLoader } from './components/common/BrandLoader';
 
 import { Activity, MessageSquare, AlertCircle } from 'lucide-react';
 
@@ -53,11 +54,16 @@ export default function App() {
   const [patientAge, setPatientAge] = useState<string>('');
   const [patientGender, setPatientGender] = useState<'M' | 'F' | 'Outro'>('F');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [viewerMeasurements, setViewerMeasurements] = useState<ExamMeasurement[]>([]);
+  const [activeCaliperValue, setActiveCaliperValue] = useState<string | null>(null);
   const [specialty, setSpecialty] = useState<UltrasoundSpecialty | ''>('');
   const [transducer, setTransducer] = useState<TransducerType | ''>('');
   const [findingText, setFindingText] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [justGeneratedReport, setJustGeneratedReport] = useState<boolean>(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const reportSectionRef = useRef<HTMLDivElement>(null);
 
   // Carregamento inicial do Storage
   useEffect(() => {
@@ -67,18 +73,66 @@ export default function App() {
 
   const refreshData = () => {
     const data = storageService.getData();
-    setPatients(data.patients);
-    setExams(data.exams);
+    const currentEx = data.activeExamId
+      ? data.exams.find((e) => e.id === data.activeExamId)
+      : undefined;
+    const currentPat = currentEx
+      ? data.patients.find((p) => p.id === currentEx.patientId)
+      : undefined;
+    const hasSavedReport = currentEx ? Boolean(data.reports[currentEx.id]) : false;
 
-    const patId = data.activePatientId || data.patients[0]?.id || null;
-    const exId = data.activeExamId || data.exams[0]?.id || null;
+    const isCurrentBlank =
+      Boolean(currentEx && currentPat) &&
+      !hasSavedReport &&
+      currentEx!.status === 'PENDING' &&
+      !currentEx!.specialty &&
+      !currentEx!.transducer &&
+      !currentEx!.capturedImageUrl &&
+      !currentEx!.manualFindingText?.trim() &&
+      !(currentEx!.viewerMeasurements && currentEx!.viewerMeasurements.length > 0) &&
+      !currentPat!.name.trim() &&
+      !(currentPat!.cpf || '').trim() &&
+      !(currentPat!.birthDate || '').trim() &&
+      !currentPat!.age;
 
-    setActivePatientId(patId);
-    setActiveExamId(exId);
-
-    if (exId) {
-      loadExamState(exId, patId);
+    if (isCurrentBlank && currentEx && currentPat) {
+      setPatients(data.patients);
+      setExams(data.exams);
+      setActivePatientId(currentPat.id);
+      setActiveExamId(currentEx.id);
+      loadExamState(currentEx.id, currentPat.id);
+      return;
     }
+
+    const now = Date.now();
+    const newPatientId = `pat-${now}`;
+    const newExamId = `exam-${now}`;
+
+    const newPatient: Patient = {
+      id: newPatientId,
+      name: '',
+      age: 0,
+      gender: 'F',
+      cpf: '',
+      birthDate: '',
+    };
+
+    const newExam: UltrasoundExam = {
+      id: newExamId,
+      patientId: newPatientId,
+      specialty: '',
+      status: 'PENDING',
+      transducer: '',
+      manualFindingText: '',
+    };
+
+    storageService.savePatient(newPatient);
+    storageService.saveExam(newExam);
+    storageService.setActiveSelection(newPatientId, newExamId);
+
+    setPatients(storageService.getPatients());
+    setExams(storageService.getExams());
+    loadExamState(newExamId, newPatientId);
   };
 
   const loadExamState = (examId: string, patientId?: string | null) => {
@@ -110,7 +164,10 @@ export default function App() {
     setTransducer(rawExam.transducer);
     setFindingText(rawExam.manualFindingText || '');
     setCapturedImage(rawExam.capturedImageUrl || null);
+    setViewerMeasurements(rawExam.viewerMeasurements || []);
+    setActiveCaliperValue(null);
     setInputMode(rawExam.capturedImageUrl ? 'CAMERA_IMAGE' : 'TEXT_FINDING');
+    setJustGeneratedReport(false);
     setAnalysisError(null);
 
     const report = storageService.getReport(examId);
@@ -132,6 +189,7 @@ export default function App() {
 
   const applyImageToActiveExam = (imageDataUrl: string) => {
     setCapturedImage(imageDataUrl);
+    setActiveCaliperValue(null);
     setInputMode('CAMERA_IMAGE');
     setAnalysisError(null);
 
@@ -146,6 +204,34 @@ export default function App() {
     }
     setActiveTab('diagnostic');
   };
+
+  const handleViewerMeasurementsChange = (nextMeasurements: ExamMeasurement[]) => {
+    setViewerMeasurements(nextMeasurements);
+    const targetId = activeExamId || exams[0]?.id;
+    const currentEx = targetId ? storageService.getExamById(targetId) : undefined;
+    if (!currentEx) return;
+    const updatedExam: UltrasoundExam = {
+      ...currentEx,
+      viewerMeasurements: nextMeasurements,
+    };
+    storageService.saveExam(updatedExam);
+    setExams(storageService.getExams());
+  };
+
+  const combinedViewerMeasurements: ExamMeasurement[] = [
+    ...viewerMeasurements.filter(
+      (m) => !(activeCaliperValue && m.id === 'caliper-live')
+    ),
+    ...(activeCaliperValue
+      ? [
+          {
+            id: 'caliper-live',
+            value: activeCaliperValue,
+            source: 'caliper' as const,
+          },
+        ]
+      : []),
+  ];
 
   const handleAnalyzeAndGenerateReport = async () => {
     const rawPatient = patients.find((p) => p.id === activePatientId);
@@ -190,6 +276,7 @@ export default function App() {
     }
 
     setIsAnalyzing(true);
+    setJustGeneratedReport(false);
     setAnalysisError(null);
 
     try {
@@ -199,6 +286,7 @@ export default function App() {
         transducer,
         manualFindingText: findingText,
         capturedImageUrl: capturedImage || undefined,
+        viewerMeasurements: combinedViewerMeasurements,
       };
       storageService.saveExam(updatedExam);
 
@@ -216,7 +304,11 @@ export default function App() {
 
       storageService.saveReport(report);
       setActiveReport(report);
+      setJustGeneratedReport(true);
       setExams(storageService.getExams());
+      setTimeout(() => {
+        reportSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
     } catch (err: unknown) {
       console.error('Erro na análise diagnóstica com UltrAI Med:', err);
       const message =
@@ -266,13 +358,19 @@ export default function App() {
     setSpecialty('');
     setTransducer('');
     setCapturedImage(null);
+    setViewerMeasurements([]);
+    setActiveCaliperValue(null);
     setFindingText('');
     setInputMode('TEXT_FINDING');
     setActiveReport(null);
+    setJustGeneratedReport(false);
     setChatMessages([]);
     setAnalysisError(null);
     setIsChatOpen(false);
     setActiveTab('diagnostic');
+    setTimeout(() => {
+      formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
   };
 
   const handleChatMessagesChange = (nextMessages: ChatMessage[]) => {
@@ -468,8 +566,12 @@ export default function App() {
           existingSession={session}
           onCancelUpgrade={() => setShowPaywallUpgrade(false)}
           onAuthenticated={(nextSession) => {
+            const wasLoggedOut = !session;
             setSession(nextSession);
             setShowPaywallUpgrade(false);
+            if (wasLoggedOut) {
+              refreshData();
+            }
           }}
         />
         <OfflineIndicator />
@@ -520,12 +622,15 @@ export default function App() {
                     imageUrl={capturedImage}
                     examTitle={`USG ${specialty ? t.specialties[specialty] : lang === 'pt' ? 'Geral' : 'General'} — ${activePatient.name || (lang === 'en' ? 'Patient' : 'Paciente')}`}
                     onRetakeOrUpload={() => setIsCameraOpen(true)}
+                    measurements={viewerMeasurements}
+                    onMeasurementsChange={handleViewerMeasurementsChange}
+                    onActiveCaliperChange={setActiveCaliperValue}
                   />
                 </div>
               )}
 
               {/* Coluna Principal */}
-              <div className={capturedImage ? 'lg:col-span-7 space-y-6' : 'space-y-6'}>
+              <div ref={formTopRef} className={`${capturedImage ? 'lg:col-span-7' : ''} space-y-6 scroll-mt-20`}>
                 <FindingInputArea
                   inputMode={inputMode}
                   onChangeInputMode={setInputMode}
@@ -550,6 +655,8 @@ export default function App() {
                   onUploadImage={applyImageToActiveExam}
                   onAnalyze={handleAnalyzeAndGenerateReport}
                   isAnalyzing={isAnalyzing}
+                  hasExistingReport={!!activeReport}
+                  viewerMeasurementsCount={combinedViewerMeasurements.length}
                   onOpenChat={() => setIsChatOpen(true)}
                 />
 
@@ -566,27 +673,51 @@ export default function App() {
                   </div>
                 )}
 
-                {activeReport ? (
-                  <StructuredReportView
-                    report={activeReport}
-                    patient={activePatient}
-                    imageDataUrl={capturedImage}
-                    onUpdateReport={(updated) => {
-                      storageService.saveReport(updated);
-                      setActiveReport(updated);
-                    }}
-                  />
-                ) : (
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center space-y-3">
-                    <Activity className="w-8 h-8 text-teal-700 dark:text-cyan-400 mx-auto" />
-                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      {t.station.awaitingTitle}
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                      {t.station.awaitingDesc}
-                    </p>
-                  </div>
-                )}
+                <div ref={reportSectionRef} className="scroll-mt-20 space-y-4">
+                  {isAnalyzing && (
+                    <div className="bg-teal-50/90 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/70 rounded-xl p-6 text-center space-y-2.5 shadow-sm">
+                      <div className="flex justify-center">
+                        <BrandLoader size="md" />
+                      </div>
+                      <h3 className="text-sm font-bold text-teal-900 dark:text-cyan-200">
+                        {t.station.generatingNewTitle}
+                      </h3>
+                      <p className="text-xs text-teal-700 dark:text-cyan-300/80 max-w-md mx-auto">
+                        {activeReport
+                          ? t.station.generatingReplaceDesc
+                          : t.station.generatingInitialDesc}
+                      </p>
+                    </div>
+                  )}
+
+                  {activeReport ? (
+                    <div className={isAnalyzing ? 'opacity-35 pointer-events-none select-none transition-opacity' : 'transition-opacity'}>
+                      <StructuredReportView
+                        report={activeReport}
+                        patient={activePatient}
+                        imageDataUrl={capturedImage}
+                        justGenerated={justGeneratedReport && !isAnalyzing}
+                        onNewExam={handleNewBlankReport}
+                        onUpdateReport={(updated) => {
+                          storageService.saveReport(updated);
+                          setActiveReport(updated);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    !isAnalyzing && (
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center space-y-3">
+                        <Activity className="w-8 h-8 text-teal-700 dark:text-cyan-400 mx-auto" />
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                          {t.station.awaitingTitle}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                          {t.station.awaitingDesc}
+                        </p>
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -28,8 +28,8 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   const { lang, toggleLang, t } = useLanguage();
 
   return (
-    <header className="sticky top-0 z-30 pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-x-2 gap-y-1.5 py-2.5 md:py-0 md:h-14">
+    <header className="sticky top-0 z-30 pt-[calc(0.875rem+env(safe-area-inset-top))] md:pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-x-2 gap-y-2 py-2.5 md:py-0 md:h-14">
         {/* Zone 1: Brand Wordmark */}
         <div className="flex items-center gap-2 shrink-0 min-w-0">
           <div
@@ -95,7 +95,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           {session?.subscriptionStatus === 'trial' && onOpenSubscription && (
             <button
               onClick={onOpenSubscription}
-              className="px-1.5 sm:px-2 py-1 rounded-md text-[11px] font-semibold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
+              className="px-2 py-1.5 min-h-[36px] sm:min-h-0 rounded-md text-[11px] font-semibold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
               title={
                 lang === 'en'
                   ? 'Free trial active — click to subscribe'
@@ -117,7 +117,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 
           <button
             onClick={toggleLang}
-            className="px-1.5 sm:px-2 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
+            className="px-2 py-1.5 min-h-[36px] sm:min-h-0 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 whitespace-nowrap shrink-0"
             title={t.nav.switchLanguage}
             aria-label={t.nav.switchLanguage}
           >
@@ -127,7 +127,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 
           <button
             onClick={onToggleDarkMode}
-            className="p-1.5 sm:p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-md transition-colors shrink-0"
+            className="p-2 min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-md transition-colors shrink-0"
             title={t.nav.toggleTheme}
             aria-label={t.nav.toggleTheme}
           >
@@ -136,7 +136,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 
           <button
             onClick={onNewExam}
-            className="px-2 sm:px-3 py-1.5 text-xs font-semibold text-white bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 rounded-lg transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 shadow-sm"
+            className="px-2.5 sm:px-3 py-1.5 min-h-[36px] sm:min-h-0 text-xs font-semibold text-white bg-teal-800 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 rounded-lg transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{t.nav.newExam}</span>
@@ -146,7 +146,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           {session && onLogout && (
             <button
               onClick={onLogout}
-              className="p-1.5 sm:p-2 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 rounded-md transition-colors shrink-0"
+              className="p-2 min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 flex items-center justify-center text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 rounded-md transition-colors shrink-0"
               title={
                 lang === 'en'
                   ? `Sign out (${session.name})`

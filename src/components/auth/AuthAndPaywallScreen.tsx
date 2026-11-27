@@ -147,8 +147,8 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
   return (
     <div className="min-h-dvh w-full max-w-full overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
       {/* Top Bar minimal */}
-      <header className="sticky top-0 z-30 pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 min-h-14 py-2 flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-30 pt-[calc(0.875rem+env(safe-area-inset-top))] md:pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 min-h-14 py-2.5 md:py-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm shrink-0 bg-[#09142B]">
               <img
@@ -170,7 +170,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
             <button
               type="button"
               onClick={toggleLang}
-              className="px-2 sm:px-2.5 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+              className="px-2.5 py-1.5 min-h-[36px] sm:min-h-0 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
             >
               <Globe className="w-3.5 h-3.5 text-teal-700 dark:text-cyan-400" />
               <span className="font-mono uppercase">{lang}</span>
@@ -178,7 +178,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
             <button
               type="button"
               onClick={onToggleDarkMode}
-              className="p-2 rounded-md text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              className="p-2 min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
               aria-label={t.nav.toggleTheme}
             >
               {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
