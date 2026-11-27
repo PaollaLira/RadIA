@@ -329,8 +329,11 @@ export default function App() {
   const handlePatientBirthDateChange = (nextBirthDate: string) => {
     setPatientBirthDate(nextBirthDate);
 
-    let computedAge: number | null = null;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(nextBirthDate)) {
+    let nextAgeValue: number | null = null;
+    if (!nextBirthDate) {
+      nextAgeValue = 0;
+      setPatientAge('');
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(nextBirthDate)) {
       const [y, m, d] = nextBirthDate.split('-').map(Number);
       const today = new Date();
       let age = today.getFullYear() - y;
@@ -339,8 +342,8 @@ export default function App() {
         age--;
       }
       if (age >= 0 && age <= 120) {
-        computedAge = age;
-        setPatientAge(age > 0 ? String(age) : '');
+        nextAgeValue = age;
+        setPatientAge(String(age));
       }
     }
 
@@ -349,7 +352,7 @@ export default function App() {
     const updatedPatient: Patient = {
       ...currentPat,
       birthDate: nextBirthDate,
-      ...(computedAge !== null ? { age: computedAge } : {}),
+      ...(nextAgeValue !== null ? { age: nextAgeValue } : {}),
     };
     storageService.savePatient(updatedPatient);
     setPatients((prev) =>

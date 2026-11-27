@@ -416,7 +416,7 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
         </div>
       </div>
 
-      {/* Patient Name, CPF, Birth Date, Age & Sex Inputs for Report */}
+      {/* Patient Name, CPF, Sex, Birth Date & Age Inputs for Report */}
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-3.5">
         <div className="sm:col-span-6">
           <label
@@ -440,20 +440,20 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
 
         <div className="sm:col-span-3">
           <label
-            htmlFor="finding-patient-age"
+            htmlFor="finding-patient-cpf"
             className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
           >
-            {t.findingInput.ageLabel}
+            {t.findingInput.cpfLabel}
           </label>
           <input
-            id="finding-patient-age"
-            type="number"
-            min="0"
-            max="120"
-            value={patientAge}
-            onChange={(e) => onChangePatientAge(e.target.value)}
-            placeholder={t.findingInput.agePlaceholder}
-            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            id="finding-patient-cpf"
+            type="text"
+            inputMode="numeric"
+            maxLength={14}
+            value={patientCpf}
+            onChange={(e) => handleCpfInput(e.target.value)}
+            placeholder={t.findingInput.cpfPlaceholder}
+            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono"
           />
         </div>
 
@@ -478,25 +478,6 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
 
         <div className="sm:col-span-6">
           <label
-            htmlFor="finding-patient-cpf"
-            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-          >
-            {t.findingInput.cpfLabel}
-          </label>
-          <input
-            id="finding-patient-cpf"
-            type="text"
-            inputMode="numeric"
-            maxLength={14}
-            value={patientCpf}
-            onChange={(e) => handleCpfInput(e.target.value)}
-            placeholder={t.findingInput.cpfPlaceholder}
-            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono"
-          />
-        </div>
-
-        <div className="sm:col-span-6">
-          <label
             htmlFor="finding-patient-birth-date"
             className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
           >
@@ -505,9 +486,29 @@ export const FindingInputArea: React.FC<FindingInputAreaProps> = ({
           <input
             id="finding-patient-birth-date"
             type="date"
+            max={new Date().toISOString().slice(0, 10)}
             value={patientBirthDate}
             onChange={(e) => onChangePatientBirthDate(e.target.value)}
             className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+          />
+        </div>
+
+        <div className="sm:col-span-6">
+          <label
+            htmlFor="finding-patient-age"
+            className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+          >
+            {t.findingInput.ageLabel}
+          </label>
+          <input
+            id="finding-patient-age"
+            type="number"
+            min="0"
+            max="120"
+            value={patientAge}
+            onChange={(e) => onChangePatientAge(e.target.value)}
+            placeholder={t.findingInput.agePlaceholder}
+            className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           />
         </div>
       </div>
