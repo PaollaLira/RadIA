@@ -487,12 +487,7 @@ export const MeasurementsReferenceView: React.FC = () => {
                   <button
                     key={band.id}
                     type="button"
-                    onClick={() => {
-                      setSelectedAgeBand(band.id);
-                      if (selectedPedOrgan === 'ped-baco') {
-                        setActiveCalculatorId(`ped-baco-${band.id}`);
-                      }
-                    }}
+                    onClick={() => setSelectedAgeBand(band.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                       selectedAgeBand === band.id
                         ? 'bg-teal-800 dark:bg-teal-700 text-white border-teal-800 dark:border-teal-600'
@@ -525,12 +520,7 @@ export const MeasurementsReferenceView: React.FC = () => {
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => {
-                      setSelectedPedOrgan(t.id);
-                      if (t.id === 'ped-baco') {
-                        setActiveCalculatorId(`ped-baco-${selectedAgeBand}`);
-                      }
-                    }}
+                    onClick={() => setSelectedPedOrgan(t.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                       selectedPedOrgan === t.id
                         ? 'bg-cyan-700 text-white border-cyan-700'
@@ -780,12 +770,7 @@ export const MeasurementsReferenceView: React.FC = () => {
               <button
                 key={cat}
                 type="button"
-                onClick={() => {
-                  setSelectedAdultCat(cat);
-                  if (cat === 'Baço' || cat === 'Spleen' || cat === 'Bazo') {
-                    setActiveCalculatorId('adu-baco');
-                  }
-                }}
+                onClick={() => setSelectedAdultCat(cat)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                   selectedAdultCat === cat
                     ? 'bg-teal-800 dark:bg-teal-700 text-white border-teal-800 dark:border-teal-600'

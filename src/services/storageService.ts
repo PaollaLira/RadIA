@@ -68,10 +68,54 @@ class StorageService {
 
   private saveData(data: StorageData): void {
     if (!this.isBrowser()) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (err) {
-      console.error('Falha ao salvar no localStorage:', err);
+
+    const tryPersist = (payload: StorageData): boolean => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    // Proactively prune heavy base64 images from older non-active exams if >2 images exist
+    let imageCount = 0;
+    const trimmedExams = data.exams.map((exam) => {
+      if (!exam.capturedImageUrl) return exam;
+      if (exam.id === data.activeExamId) return exam;
+      imageCount += 1;
+      if (imageCount > 2) {
+        const { capturedImageUrl: _dropped, ...rest } = exam;
+        return rest;
+      }
+      return exam;
+    });
+
+    const candidate: StorageData = { ...data, exams: trimmedExams };
+    if (tryPersist(candidate)) return;
+
+    // Fallback 1: drop capturedImageUrl from all non-active exams
+    const activeOnlyImages: StorageData = {
+      ...data,
+      exams: data.exams.map((exam) => {
+        if (exam.id === data.activeExamId || !exam.capturedImageUrl) return exam;
+        const { capturedImageUrl: _dropped, ...rest } = exam;
+        return rest;
+      }),
+    };
+    if (tryPersist(activeOnlyImages)) return;
+
+    // Fallback 2: drop all capturedImageUrl payloads so patient/exam/report text still saves safely
+    const noImages: StorageData = {
+      ...data,
+      exams: data.exams.map((exam) => {
+        if (!exam.capturedImageUrl) return exam;
+        const { capturedImageUrl: _dropped, ...rest } = exam;
+        return rest;
+      }),
+    };
+    if (!tryPersist(noImages)) {
+      console.error('Falha ao salvar no localStorage mesmo após compactação.');
     }
   }
 

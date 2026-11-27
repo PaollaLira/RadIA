@@ -160,8 +160,6 @@ export const TRANSLATIONS = {
       footerSub: 'Apoio à decisão clínica baseado em evidências',
       defaultPhysician: 'Dr(a). Médico(a) Radiologista',
       justGeneratedBanner: 'Novo laudo gerado com sucesso',
-      generatedAtPrefix: 'Gerado às',
-      startAnotherReport: 'Novo Laudo',
     },
     chat: {
       title: 'UltrAI Med · Copiloto IA',
@@ -404,8 +402,6 @@ export const TRANSLATIONS = {
       footerSub: 'Evidence-based clinical decision support',
       defaultPhysician: 'Dr. Attending Radiologist',
       justGeneratedBanner: 'New report generated successfully',
-      generatedAtPrefix: 'Generated at',
-      startAnotherReport: 'New Report',
     },
     chat: {
       title: 'UltrAI Med · AI Copilot',
@@ -648,8 +644,6 @@ export const TRANSLATIONS = {
       footerSub: 'Apoyo a la decisión clínica basado en evidencia',
       defaultPhysician: 'Dr(a). Médico(a) Radiólogo(a)',
       justGeneratedBanner: 'Nuevo informe generado con éxito',
-      generatedAtPrefix: 'Generado a las',
-      startAnotherReport: 'Nuevo Informe',
     },
     chat: {
       title: 'UltrAI Med · Copiloto IA',

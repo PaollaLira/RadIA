@@ -18,7 +18,7 @@ import { RadiologyChatbot } from './components/chat/RadiologyChatbot';
 import { MeasurementsReferenceView } from './components/measurements/MeasurementsReferenceView';
 import { AuthAndPaywallScreen } from './components/auth/AuthAndPaywallScreen';
 import { authService } from './services/authService';
-import { AuthSession } from './types/auth';
+import { AuthSession, ExpiredAccountPreview } from './types/auth';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { BrandLoader } from './components/common/BrandLoader';
 
@@ -35,8 +35,12 @@ export default function App() {
   const [activeReport, setActiveReport] = useState<StandardizedRadiologyReport | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
-  // Autenticação e Assinatura (protótipo local sem backend)
+  // Autenticação e Assinatura (protótipo local com persistência em localStorage, cookie e IndexedDB)
   const [session, setSession] = useState<AuthSession | null>(() => authService.getSession());
+  const [isRestoringSession, setIsRestoringSession] = useState<boolean>(() => !authService.getSession());
+  const [expiredStartupAccount, setExpiredStartupAccount] = useState<ExpiredAccountPreview | null>(
+    () => authService.getExpiredStartupAccount()
+  );
   const [showPaywallUpgrade, setShowPaywallUpgrade] = useState<boolean>(false);
 
   // Navegação e modais
@@ -65,10 +69,40 @@ export default function App() {
   const formTopRef = useRef<HTMLDivElement>(null);
   const reportSectionRef = useRef<HTMLDivElement>(null);
 
-  // Carregamento inicial do Storage
+  // Carregamento inicial do Storage e restauração resiliente da sessão
   useEffect(() => {
     refreshData();
     document.documentElement.classList.add('dark');
+
+    if (session) {
+      authService.requestDurableStorage();
+      setIsRestoringSession(false);
+      return;
+    }
+
+    let cancelled = false;
+    authService
+      .restoreSessionFromPersistentStorage()
+      .then((restored) => {
+        if (cancelled) return;
+        if (restored) {
+          setSession(restored);
+          setExpiredStartupAccount(null);
+          authService.requestDurableStorage();
+          refreshData();
+        } else {
+          setExpiredStartupAccount(authService.getExpiredStartupAccount());
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsRestoringSession(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const refreshData = () => {
@@ -551,10 +585,19 @@ export default function App() {
   const handleLogout = () => {
     authService.logout();
     setSession(null);
+    setExpiredStartupAccount(null);
     setShowPaywallUpgrade(false);
     setIsChatOpen(false);
     setActiveTab('diagnostic');
   };
+
+  if (isRestoringSession) {
+    return (
+      <div className="min-h-dvh w-full bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <BrandLoader size="lg" />
+      </div>
+    );
+  }
 
   if (!session || showPaywallUpgrade) {
     return (
@@ -562,12 +605,14 @@ export default function App() {
         <AuthAndPaywallScreen
           isDarkMode={isDarkMode}
           onToggleDarkMode={handleToggleDarkMode}
-          initialMode={showPaywallUpgrade ? 'payment' : 'login'}
+          initialMode={showPaywallUpgrade || expiredStartupAccount ? 'payment' : 'login'}
           existingSession={session}
+          initialExpiredAccount={expiredStartupAccount}
           onCancelUpgrade={() => setShowPaywallUpgrade(false)}
           onAuthenticated={(nextSession) => {
             const wasLoggedOut = !session;
             setSession(nextSession);
+            setExpiredStartupAccount(null);
             setShowPaywallUpgrade(false);
             if (wasLoggedOut) {
               refreshData();
@@ -697,7 +742,6 @@ export default function App() {
                         patient={activePatient}
                         imageDataUrl={capturedImage}
                         justGenerated={justGeneratedReport && !isAnalyzing}
-                        onNewExam={handleNewBlankReport}
                         onUpdateReport={(updated) => {
                           storageService.saveReport(updated);
                           setActiveReport(updated);

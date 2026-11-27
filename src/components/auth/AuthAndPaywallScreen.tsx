@@ -35,6 +35,7 @@ interface AuthAndPaywallScreenProps {
   onAuthenticated: (session: AuthSession) => void;
   initialMode?: AuthViewMode;
   existingSession?: AuthSession | null;
+  initialExpiredAccount?: ExpiredAccountPreview | null;
   onCancelUpgrade?: () => void;
 }
 
@@ -44,6 +45,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
   onAuthenticated,
   initialMode = 'login',
   existingSession,
+  initialExpiredAccount = null,
   onCancelUpgrade,
 }) => {
   const { lang, toggleLang, t } = useLanguage();
@@ -65,7 +67,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
           crm: existingSession.crm,
           email: existingSession.email,
         }
-      : null
+      : initialExpiredAccount
   );
 
   // Register state
