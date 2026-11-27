@@ -2,6 +2,7 @@ import React from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { Sun, Moon, Database, Plus, Ruler, Globe, LogOut, Sparkles } from 'lucide-react';
 import { AuthSession } from '../../types/auth';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface TopNavBarProps {
   activeTab: 'diagnostic' | 'measurements' | 'backup';
@@ -88,8 +89,9 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: Trial Badge, Language Switcher, Theme, Primary Action & Logout */}
+        {/* Zone 3: PWA Install, Trial Badge, Language Switcher, Theme, Primary Action & Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <PWAInstallButton />
           {session?.subscriptionStatus === 'trial' && onOpenSubscription && (
             <button
               onClick={onOpenSubscription}

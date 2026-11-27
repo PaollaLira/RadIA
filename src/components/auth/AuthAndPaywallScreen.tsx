@@ -25,6 +25,7 @@ import {
   ExpiredAccountPreview,
   SubscriptionPlan,
 } from '../../types/auth';
+import { PWAInstallButton } from '../common/PWAInstallButton';
 
 type AuthViewMode = 'login' | 'register' | 'payment';
 
@@ -165,6 +166,7 @@ export const AuthAndPaywallScreen: React.FC<AuthAndPaywallScreenProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <PWAInstallButton />
             <button
               type="button"
               onClick={toggleLang}

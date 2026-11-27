@@ -19,6 +19,7 @@ import { MeasurementsReferenceView } from './components/measurements/Measurement
 import { AuthAndPaywallScreen } from './components/auth/AuthAndPaywallScreen';
 import { authService } from './services/authService';
 import { AuthSession } from './types/auth';
+import { OfflineIndicator } from './components/common/OfflineIndicator';
 
 import { Activity, MessageSquare, AlertCircle } from 'lucide-react';
 
@@ -426,17 +427,20 @@ export default function App() {
 
   if (!session || showPaywallUpgrade) {
     return (
-      <AuthAndPaywallScreen
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={handleToggleDarkMode}
-        initialMode={showPaywallUpgrade ? 'payment' : 'login'}
-        existingSession={session}
-        onCancelUpgrade={() => setShowPaywallUpgrade(false)}
-        onAuthenticated={(nextSession) => {
-          setSession(nextSession);
-          setShowPaywallUpgrade(false);
-        }}
-      />
+      <>
+        <AuthAndPaywallScreen
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={handleToggleDarkMode}
+          initialMode={showPaywallUpgrade ? 'payment' : 'login'}
+          existingSession={session}
+          onCancelUpgrade={() => setShowPaywallUpgrade(false)}
+          onAuthenticated={(nextSession) => {
+            setSession(nextSession);
+            setShowPaywallUpgrade(false);
+          }}
+        />
+        <OfflineIndicator />
+      </>
     );
   }
 
@@ -600,6 +604,7 @@ export default function App() {
         activeReport={activeReport}
         activeImageDataUrl={capturedImage}
       />
+      <OfflineIndicator />
     </div>
   );
 }
